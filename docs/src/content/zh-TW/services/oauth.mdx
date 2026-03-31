@@ -1,0 +1,43 @@
+---
+title: OAuth 認證
+---
+
+# OAuth 認證
+
+**原始碼**: `src/services/oauth/`
+
+## 概述
+
+OAuth 服務處理 Claude Pro、Team 或 Enterprise 訂閱使用者的基於瀏覽器的認證流程。
+
+## 流程
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant CC as Claude Code
+    participant Browser
+    participant API as Auth Server
+
+    User->>CC: claude (first run)
+    CC->>Browser: Open auth URL
+    Browser->>API: User logs in
+    API->>Browser: Redirect with token
+    Browser->>CC: Token received
+    CC->>CC: Store credentials
+    CC->>User: Authenticated
+```
+
+## 認證方式
+
+| 方式 | 使用場景 |
+|------|---------|
+| API Key | 透過 `ANTHROPIC_API_KEY` 直接 API 訪問 |
+| OAuth | Claude Pro/Team/Enterprise 使用者 |
+| Bedrock | AWS Bedrock 憑證 |
+| Vertex | Google Cloud 憑證 |
+
+## 命令
+
+- `/login` — 發起認證流程
+- `/logout` — 清除儲存的憑證

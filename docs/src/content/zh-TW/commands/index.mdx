@@ -1,0 +1,44 @@
+---
+title: 命令系統
+---
+
+# 命令系統
+
+**原始碼**: `src/commands.ts` (754 行) 和 `src/commands/`（103+ 子目錄）
+
+## 概述
+
+Claude Code 擁有 103+ 個 CLI 命令，組織為登錄檔。命令可以透過 REPL 中的斜槓語法（`/command`）或 CLI 子命令（`claude command`）呼叫。
+
+## 命令登錄檔
+
+命令登錄檔（`src/commands.ts`）管理：
+
+- **註冊** — 命令以名稱、描述和處理器進行自注冊
+- **發現** — 從 `src/commands/` 目錄自動發現命令
+- **解析** — 將使用者輸入匹配到已註冊的命令
+- **執行** — 使用解析後的引數呼叫命令
+
+## 命令結構
+
+每個命令是 `src/commands/` 下的一個目錄，至少包含一個匯出以下內容的入口檔案：
+
+- **name** — 命令識別符號（用於 `/name` 語法）
+- **description** — 簡短幫助文字
+- **handler** — 執行命令的非同步函式
+- **options** — CLI 引數定義（可選）
+
+## 命令分類
+
+命令按功能分組：
+
+- **Git** — `/commit`、`/diff`、`/commit-push-pr`
+- **會話** — `/resume`、`/clear`、`/compact`、`/session`
+- **配置** — `/config`、`/theme`、`/color`、`/login`、`/logout`
+- **開發** — `/doctor`、`/debug-tool-call`、`/autofix-pr`
+- **導航** — `/add-dir`、`/ide`、`/desktop`
+- **資訊** — `/cost`、`/help`、`/brief`
+- **擴充套件** — `/mcp`、`/skills`、`/agents`
+- **編輯** — `/vim`、`/voice`
+
+完整參考請檢視[內建命令](/zh-TW/commands/builtin-commands)。

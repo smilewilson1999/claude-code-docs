@@ -1,0 +1,30 @@
+---
+title: API 服務
+---
+
+# API 服務
+
+**原始碼**: `src/services/api/`
+
+## 概述
+
+API 服務管理與 Claude AI 後端的所有通訊。處理請求構建、流式響應、錯誤恢復和速率限制。
+
+## 特性
+
+### 流式傳輸
+所有 AI 響應逐 token 流式傳輸。API 服務處理來自 Claude API 的 Server-Sent Events (SSE) 以實現實時輸出。
+
+### 多提供商支援
+
+| 提供商 | 環境變數 |
+|--------|---------|
+| Anthropic API | `ANTHROPIC_API_KEY` |
+| AWS Bedrock | `CLAUDE_CODE_USE_BEDROCK` |
+| Google Vertex | `CLAUDE_CODE_USE_VERTEX` |
+
+### 速率限制
+`rateLimiting.ts` 實現了指數退避和重試邏輯，優雅地處理 API 速率限制。
+
+### 錯誤處理
+健壯的錯誤處理，覆蓋網路故障、認證錯誤、速率限制響應、格式錯誤的響應和超時條件。

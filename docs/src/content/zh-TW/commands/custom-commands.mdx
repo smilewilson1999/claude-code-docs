@@ -1,0 +1,62 @@
+---
+title: 自定義命令
+---
+
+# 自定義命令
+
+Claude Code 支援透過自定義命令擴充套件命令系統。
+
+## 命令介面
+
+每個命令模組匯出一個命令定義：
+
+```typescript
+export default {
+  name: "my-command",
+  description: "命令功能的簡要描述",
+  options: [
+    {
+      name: "--flag",
+      description: "一個可選標誌",
+    },
+  ],
+  handler: async (args, context) => {
+    // 命令實現
+  },
+};
+```
+
+## 註冊
+
+`src/commands/` 目錄中的命令由命令登錄檔自動發現。每個子目錄被視為一個命令模組。
+
+```
+src/commands/
+├── my-command/
+│   └── index.ts    # 命令定義
+├── commit/
+│   └── index.ts
+└── ...
+```
+
+## 命令上下文
+
+處理器函式接收一個上下文物件，可以訪問：
+
+- **State** — 當前應用狀態
+- **Tools** — 可用工具例項
+- **API** — Claude API 客戶端
+- **Config** — 使用者配置
+- **History** — 會話歷史
+
+## 特性門控命令
+
+一些命令根據特性標誌條件註冊：
+
+```typescript
+if (feature("BRIDGE_MODE")) {
+  registerCommand(bridgeCommand);
+}
+```
+
+這確保特性門控命令僅在對應特性啟用時可用。

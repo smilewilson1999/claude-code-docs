@@ -1,0 +1,45 @@
+---
+title: MCP 工具
+---
+
+# MCP 工具
+
+**原始碼**: `src/tools/MCPTool/` 和 `src/services/mcp/`
+
+## 概述
+
+MCP 工具透過 Model Context Protocol (MCP) 將 Claude Code 與外部工具伺服器橋接。這使得第三方工具和服務可以作為原生 Claude Code 工具使用。
+
+## 工作原理
+
+1. 使用者配置 MCP 伺服器（在設定或 CLAUDE.md 中）
+2. 啟動時，Claude Code 連線到配置的 MCP 伺服器
+3. 每個伺服器的工具註冊為可用工具
+4. 當 AI 呼叫 MCP 工具時，請求被轉發到伺服器
+5. 伺服器的響應作為工具結果返回
+
+## MCP 伺服器配置
+
+MCP 伺服器可在以下位置配置：
+
+- `~/.claude/settings.json` — 全域性 MCP 伺服器
+- 專案 `.claude/settings.json` — 專案特定伺服器
+- `CLAUDE.md` — 內聯 MCP 伺服器定義
+
+## 工具命名
+
+MCP 工具以伺服器名稱為名稱空間：
+
+```
+mcp__<server-name>__<tool-name>
+```
+
+例如：`mcp__github__create_issue`
+
+## 傳輸型別
+
+MCP 客戶端支援多種傳輸機制：
+
+- **stdio** — 透過標準輸入/輸出通訊
+- **SSE** — 基於 HTTP 的 Server-Sent Events
+- **In-process** — 直接函式呼叫（用於內建 MCP 伺服器）

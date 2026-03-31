@@ -1,0 +1,58 @@
+---
+title: 任務工具
+---
+
+# 任務工具
+
+**原始碼**: `src/tools/TaskCreateTool/`、`src/tools/TaskUpdateTool/`、`src/tools/TaskGetTool/`、`src/tools/TaskListTool/`、`src/tools/TaskStopTool/`
+
+## 概述
+
+任務工具在 Claude Code 會話中提供結構化的任務管理功能。
+
+## 可用工具
+
+### TaskCreateTool
+建立新任務：
+- **subject** — 祈使句形式的簡短標題
+- **description** — 詳細描述
+- **activeForm** — 載入指示器顯示的現在進行時形式（可選）
+
+### TaskUpdateTool
+更新現有任務：
+- **taskId** — 任務識別符號
+- **status** — `pending` → `in_progress` → `completed`（或 `deleted`）
+- **addBlocks/addBlockedBy** — 任務依賴關係
+
+### TaskGetTool
+按 ID 獲取完整的任務詳情，包括描述、狀態和依賴資訊。
+
+### TaskListTool
+列出所有任務的摘要資訊：ID、標題、狀態、負責人和阻塞依賴。
+
+### TaskStopTool
+按 ID 停止正在執行的後臺任務。
+
+## 規劃模式工具
+
+### EnterPlanMode
+轉換到規劃模式，用於結構化實現規劃：
+- 使用只讀工具探索程式碼庫
+- 設計實現方案
+- 提交方案供使用者審批
+
+### ExitPlanMode
+表示規劃完成並請求使用者批准開始實現。
+
+## Worktree 工具
+
+### EnterWorktree
+建立隔離的 git worktree 用於安全實驗：
+- 基於 HEAD 的新分支
+- 倉庫的隔離副本
+- 退出時可保留或移除
+
+### ExitWorktree
+離開 worktree 會話：
+- **keep** — 保留 worktree 和分支在磁碟上
+- **remove** — 刪除 worktree 和分支
