@@ -1,0 +1,80 @@
+---
+title: File Tools
+---
+
+# File Tools
+
+**Source**: `src/tools/FileReadTool/`, `src/tools/FileEditTool/`, `src/tools/FileWriteTool/`, `src/tools/GlobTool/`, `src/tools/GrepTool/`
+
+## FileReadTool (Read)
+
+Reads file contents from the filesystem.
+
+**Parameters:**
+- `file_path` — Absolute path to the file
+- `offset` — Starting line number (optional)
+- `limit` — Number of lines to read (optional)
+
+**Features:**
+- Returns content with line numbers (cat -n format)
+- Supports images (PNG, JPG) — presented visually
+- Supports PDFs with page range selection
+- Supports Jupyter notebooks (.ipynb)
+- Default limit: 2000 lines
+
+## FileEditTool (Edit)
+
+Performs exact string replacements in files.
+
+**Parameters:**
+- `file_path` — Absolute path to the file
+- `old_string` — Text to find (must be unique in file)
+- `new_string` — Replacement text
+- `replace_all` — Replace all occurrences (optional, default false)
+
+**Key Behaviors:**
+- Requires the file to have been read first in the conversation
+- Fails if `old_string` is not unique (provide more context)
+- Preserves exact indentation
+
+## FileWriteTool (Write)
+
+Creates new files or completely rewrites existing files.
+
+**Parameters:**
+- `file_path` — Absolute path (must be absolute)
+- `content` — Full file content
+
+**Key Behaviors:**
+- Overwrites existing files
+- Requires file to have been read first (for existing files)
+- Preferred for new files; Edit is preferred for modifications
+
+## GlobTool (Glob)
+
+Fast file pattern matching.
+
+**Parameters:**
+- `pattern` — Glob pattern (e.g., `"**/*.ts"`, `"src/**/*.tsx"`)
+- `path` — Directory to search in (optional)
+
+**Features:**
+- Works with any codebase size
+- Results sorted by modification time
+- Supports standard glob patterns
+
+## GrepTool (Grep)
+
+Content search powered by ripgrep.
+
+**Parameters:**
+- `pattern` — Regular expression to search for
+- `path` — File or directory to search in (optional)
+- `glob` — File pattern filter (e.g., `"*.js"`)
+- `output_mode` — `"content"`, `"files_with_matches"`, or `"count"`
+
+**Features:**
+- Full regex syntax support
+- File type filtering
+- Context lines (-A, -B, -C)
+- Multiline matching support

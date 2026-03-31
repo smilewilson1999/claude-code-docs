@@ -1,0 +1,47 @@
+---
+title: OAuth
+---
+
+# OAuth
+
+**Source**: `src/services/oauth/`
+
+## Overview
+
+The OAuth service handles browser-based authentication flows for users with Claude Pro, Team, or Enterprise subscriptions.
+
+## Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant CC as Claude Code
+    participant Browser
+    participant API as Auth Server
+
+    User->>CC: claude (first run)
+    CC->>Browser: Open auth URL
+    Browser->>API: User logs in
+    API->>Browser: Redirect with token
+    Browser->>CC: Token received
+    CC->>CC: Store credentials
+    CC->>User: Authenticated
+```
+
+## Authentication Methods
+
+| Method | Use Case |
+|--------|----------|
+| API Key | Direct API access via `ANTHROPIC_API_KEY` |
+| OAuth | Claude Pro/Team/Enterprise users |
+| Bedrock | AWS Bedrock credentials |
+| Vertex | Google Cloud credentials |
+
+## Token Storage
+
+OAuth tokens are stored securely in the user's home directory and refreshed automatically when expired.
+
+## Commands
+
+- `/login` — Initiate authentication flow
+- `/logout` — Clear stored credentials

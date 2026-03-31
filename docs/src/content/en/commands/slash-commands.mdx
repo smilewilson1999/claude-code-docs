@@ -1,0 +1,58 @@
+---
+title: Slash Commands
+---
+
+# Slash Commands
+
+Slash commands provide quick access to functionality within the interactive REPL.
+
+## Usage
+
+Type `/` followed by the command name:
+
+```
+> /commit
+```
+
+Commands can accept arguments:
+
+```
+> /diff --staged
+```
+
+## Auto-completion
+
+The REPL provides tab-completion for slash commands. Type `/` and press Tab to see available commands.
+
+## Relationship to Skills
+
+Some slash commands are powered by the [Skills System](/en/subsystems/skills). Skills are extended command definitions that can:
+
+- Load custom prompts
+- Chain multiple operations
+- Accept structured input
+- Provide specialized UI
+
+When a user invokes a skill via `/skill-name`, the skill's prompt is expanded and executed.
+
+## Common Slash Commands
+
+| Command | Category | Description |
+|---------|----------|-------------|
+| `/help` | Info | List available commands |
+| `/clear` | Session | Clear conversation |
+| `/compact` | Session | Compress context |
+| `/commit` | Git | Create AI-assisted commit |
+| `/diff` | Git | Show changes |
+| `/cost` | Info | Token/cost summary |
+| `/config` | Config | Edit settings |
+| `/mcp` | Extension | Manage MCP servers |
+
+## Parsing
+
+Slash commands are parsed by the command system in `src/commands.ts`. The parser:
+
+1. Detects the `/` prefix in user input
+2. Extracts the command name and arguments
+3. Resolves to a registered command handler
+4. Executes with parsed arguments

@@ -1,0 +1,69 @@
+---
+title: Memory Files
+---
+
+# Memory Files
+
+**Source**: `src/memdir/`
+
+## Overview
+
+Claude Code uses a memory file system to persist information across sessions. This enables the AI to build up knowledge about projects and user preferences over time.
+
+## CLAUDE.md Convention
+
+The `CLAUDE.md` file is a project-level instruction file that Claude Code automatically loads into context:
+
+```markdown
+# Project Instructions
+
+- Use TypeScript strict mode
+- Run tests with `bun test`
+- Follow existing code patterns
+```
+
+### Loading Order
+
+CLAUDE.md files are loaded from multiple locations (in order):
+
+1. `~/.claude/CLAUDE.md` — Global instructions
+2. Parent directories (walking up from project root)
+3. `./CLAUDE.md` — Project root instructions
+
+## Auto-Memory Directory
+
+The auto-memory system stores persistent notes at:
+
+```
+~/.claude/projects/<project-hash>/memory/
+└── MEMORY.md          # Main memory file
+```
+
+### How It Works
+
+- `MEMORY.md` is automatically loaded into conversation context
+- The AI can write observations, patterns, and preferences
+- Content persists across sessions
+- Files are organized semantically by topic
+
+### What Gets Saved
+
+- Stable patterns confirmed across multiple interactions
+- Architectural decisions and important file paths
+- User preferences for workflow and tools
+- Solutions to recurring problems
+
+### What Does NOT Get Saved
+
+- Session-specific context
+- Incomplete or unverified information
+- Anything that duplicates CLAUDE.md instructions
+
+## Memory Management
+
+The `/memory` command provides:
+
+- View current memory files
+- Edit memory content
+- Clear specific memories
+- Manage per-project memory

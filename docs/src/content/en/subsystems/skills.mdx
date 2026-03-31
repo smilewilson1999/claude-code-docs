@@ -1,0 +1,54 @@
+---
+title: Skills System
+---
+
+# Skills System
+
+**Source**: `src/skills/` — `bundledSkills.ts`, `loadSkillsDir.ts`, `bundled/`
+
+## Overview
+
+Skills are extended command definitions that package prompts, tool configurations, and workflows into reusable units. They can be invoked via slash commands.
+
+## Bundled Skills
+
+Claude Code ships with 17+ bundled skills in `src/skills/bundled/`:
+
+| Skill | Description |
+|-------|-------------|
+| `commit` | AI-assisted git commits |
+| `claude-api` | Build apps with Claude API/SDK |
+| `keybindings` | Customize keyboard shortcuts |
+| `simplify` | Review and simplify code |
+| `loop` | Run commands on recurring intervals |
+| `remember` | Save information to memory |
+| `skillify` | Create new skills |
+| `batch` | Batch operations |
+
+## Skill Structure
+
+A skill definition includes:
+
+- **name** — Identifier for invocation
+- **description** — What the skill does
+- **prompt** — The prompt template that gets expanded
+- **triggers** — When to suggest this skill
+- **tools** — Tools the skill needs access to
+
+## Loading Skills
+
+Skills are loaded from two sources:
+
+1. **Bundled** (`bundledSkills.ts`) — Built into the application
+2. **Custom** (`loadSkillsDir.ts`) — Loaded from user's skill directories
+
+## Invocation
+
+Skills are invoked through the Skill tool or via slash commands:
+
+```
+/commit        # Invokes the commit skill
+/simplify      # Invokes the simplify skill
+```
+
+When invoked, the skill's prompt is expanded with context and executed as if the user had typed it directly.

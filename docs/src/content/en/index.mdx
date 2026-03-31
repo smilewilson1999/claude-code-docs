@@ -1,0 +1,46 @@
+---
+title: Claude Code Docs
+---
+
+# Claude Code
+
+An AI-powered coding assistant that runs in your terminal, built with TypeScript and React (Ink).
+
+## At a Glance
+
+| Metric | Count |
+|--------|-------|
+| CLI Commands | 103+ |
+| Built-in Tools | 45+ |
+| React Hooks | 87+ |
+| Major Modules | 39 |
+| Utility Modules | 298+ |
+
+## Documentation Sections
+
+### [Architecture](/en/architecture)
+High-level design: entry point, query engine, state management, terminal UI, and feature flags.
+
+### [Commands](/en/commands)
+The command system: 103+ built-in commands, slash commands, and custom command extensions.
+
+### [Tools](/en/tools)
+45+ development tools: file operations, bash execution, multi-agent delegation, MCP integration, and the permission system.
+
+### [Subsystems](/en/subsystems)
+Major subsystems: MCP, skills, plugins, remote bridge, vim mode, coordinator, and session management.
+
+### [Services](/en/services)
+Service layer: API communication, analytics, LSP integration, and OAuth.
+
+### [Internals](/en/internals)
+Deep internals: Ink rendering engine, React hooks catalog, keybindings, utilities, memory files, and constants.
+
+## Tech Stack
+
+- **Runtime**: Bun / Node.js
+- **Language**: TypeScript (strict)
+- **UI Framework**: React via custom Ink engine
+- **AI Backend**: Claude API (streaming)
+- **Extension Protocol**: Model Context Protocol (MCP)
+- **Build**: Bun bundler with feature flag dead-code elimination

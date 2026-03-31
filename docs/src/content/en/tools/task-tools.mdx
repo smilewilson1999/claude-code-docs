@@ -1,0 +1,71 @@
+---
+title: Task Tools
+---
+
+# Task Tools
+
+**Source**: `src/tools/TaskCreateTool/`, `src/tools/TaskUpdateTool/`, `src/tools/TaskGetTool/`, `src/tools/TaskListTool/`, `src/tools/TaskStopTool/`
+
+## Overview
+
+Task tools provide structured task management within Claude Code sessions. They enable creating, tracking, and completing work items.
+
+## Available Tools
+
+### TaskCreateTool
+
+Creates a new task with:
+- **subject** — Brief title in imperative form
+- **description** — Detailed description
+- **activeForm** — Present continuous form for spinner display (optional)
+
+### TaskUpdateTool
+
+Updates an existing task:
+- **taskId** — Task identifier
+- **status** — `pending` → `in_progress` → `completed` (or `deleted`)
+- **addBlocks/addBlockedBy** — Task dependencies
+
+### TaskGetTool
+
+Retrieves full task details by ID, including description, status, and dependency information.
+
+### TaskListTool
+
+Lists all tasks with summary info: ID, subject, status, owner, and blocked-by dependencies.
+
+### TaskStopTool
+
+Stops a running background task by ID.
+
+## Plan Mode Tools
+
+**Source**: `src/tools/EnterPlanModeTool/`, `src/tools/ExitPlanModeTool/`
+
+### EnterPlanMode
+
+Transitions to plan mode for structured implementation planning:
+- Explore codebase with read-only tools
+- Design implementation approach
+- Present plan for user approval
+
+### ExitPlanMode
+
+Signals plan completion and requests user approval to begin implementation.
+
+## Worktree Tools
+
+**Source**: `src/tools/EnterWorktreeTool/`, `src/tools/ExitWorktreeTool/`
+
+### EnterWorktree
+
+Creates an isolated git worktree for safe experimentation:
+- New branch based on HEAD
+- Isolated copy of repository
+- Can be kept or removed on exit
+
+### ExitWorktree
+
+Leaves a worktree session:
+- **keep** — Preserve worktree and branch on disk
+- **remove** — Delete worktree and branch

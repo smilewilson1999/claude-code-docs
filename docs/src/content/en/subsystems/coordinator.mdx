@@ -1,0 +1,39 @@
+---
+title: Coordinator
+---
+
+# Coordinator
+
+**Source**: `src/coordinator/` — `coordinatorMode.ts`
+
+## Overview
+
+The coordinator is a multi-agent orchestration system that enables parallel task execution across multiple Claude instances. This feature is gated behind the `COORDINATOR_MODE` feature flag.
+
+## How It Works
+
+The coordinator acts as a supervisory agent that:
+
+1. Analyzes a complex task and breaks it into sub-tasks
+2. Assigns sub-tasks to specialized agents
+3. Monitors progress across all agents
+4. Aggregates results into a coherent output
+
+## Relationship to Agent Tool
+
+While the [Agent Tool](/en/tools/agent-tool) enables one-off sub-agent spawning, the coordinator provides a higher-level orchestration pattern:
+
+| Feature | Agent Tool | Coordinator |
+|---------|-----------|-------------|
+| Scope | Single delegation | Multi-agent orchestration |
+| Planning | Caller decides | Coordinator plans |
+| Parallelism | Manual | Automatic |
+| Monitoring | Per-agent | Unified dashboard |
+
+## UI Integration
+
+When coordinator mode is active, the terminal UI shows:
+
+- `CoordinatorAgentStatus` component for overall progress
+- Individual agent status indicators
+- Aggregated output display
