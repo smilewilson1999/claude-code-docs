@@ -1,0 +1,59 @@
+---
+title: 特性标志
+---
+
+# 特性标志
+
+**源码**: `src/main.tsx`（特性标志初始化）及各条件导入处
+
+## 概述
+
+Claude Code 使用编译时特性标志进行死代码消除。当某个特性在编译时被禁用，该特性的所有代码路径将被 Bun bundler 从最终包中完全移除。
+
+## 机制
+
+特性标志通过 `feature()` 函数调用模式进行评估：
+
+```typescript
+if (feature("COORDINATOR_MODE")) {
+  // 当 COORDINATOR_MODE 被禁用时，
+  // 整个代码块从 bundle 中移除
+  import("./coordinator/coordinatorMode");
+}
+```
+
+Bun bundler 将 `feature()` 调用视为编译时常量，从而实现对禁用特性分支的 tree-shaking。
+
+## 已知特性标志
+
+| 标志 | 描述 |
+|------|------|
+| `KAIROS` | 助手模式 — 替代交互模式 |
+| `COORDINATOR_MODE` | 多代理协调器，用于并行任务执行 |
+| `BRIDGE_MODE` | 远程会话桥接，用于云端执行 |
+| `VOICE_MODE` | 语音输入/输出能力 |
+| `Chicago_MCP` | 通过 MCP 实现计算机使用 |
+| `DAEMON` | 后台守护进程工作进程 |
+| `WORKFLOW_SCRIPTS` | 工作流脚本系统 |
+| `PROACTIVE` | 主动建议和操作 |
+
+## 对架构的影响
+
+特性标志影响：
+
+1. **入口点** — `main.tsx` 和 `cli.tsx` 中的条件导入
+2. **命令** — 特性门控命令仅在其标志激活时注册
+3. **组件** — UI 元素条件渲染
+4. **服务** — 服务模块按需加载
+
+## 构建变体
+
+不同的构建可以启用不同的标志组合，为每个部署目标生成优化的独立包。这在保持基础包较小的同时支持特殊构建中的高级功能。
+
+## 运行时 vs 编译时
+
+大多数特性标志在**编译时**评估以获得最优包大小。但某些标志也可以在**运行时**通过以下方式评估：
+
+- 环境变量
+- 配置文件
+- GrowthBook（A/B 测试服务）集成，位于 `src/services/analytics/`

@@ -1,0 +1,58 @@
+---
+title: 任务工具
+---
+
+# 任务工具
+
+**源码**: `src/tools/TaskCreateTool/`、`src/tools/TaskUpdateTool/`、`src/tools/TaskGetTool/`、`src/tools/TaskListTool/`、`src/tools/TaskStopTool/`
+
+## 概述
+
+任务工具在 Claude Code 会话中提供结构化的任务管理功能。
+
+## 可用工具
+
+### TaskCreateTool
+创建新任务：
+- **subject** — 祈使句形式的简短标题
+- **description** — 详细描述
+- **activeForm** — 加载指示器显示的现在进行时形式（可选）
+
+### TaskUpdateTool
+更新现有任务：
+- **taskId** — 任务标识符
+- **status** — `pending` → `in_progress` → `completed`（或 `deleted`）
+- **addBlocks/addBlockedBy** — 任务依赖关系
+
+### TaskGetTool
+按 ID 获取完整的任务详情，包括描述、状态和依赖信息。
+
+### TaskListTool
+列出所有任务的摘要信息：ID、标题、状态、负责人和阻塞依赖。
+
+### TaskStopTool
+按 ID 停止正在运行的后台任务。
+
+## 规划模式工具
+
+### EnterPlanMode
+转换到规划模式，用于结构化实现规划：
+- 使用只读工具探索代码库
+- 设计实现方案
+- 提交方案供用户审批
+
+### ExitPlanMode
+表示规划完成并请求用户批准开始实现。
+
+## Worktree 工具
+
+### EnterWorktree
+创建隔离的 git worktree 用于安全实验：
+- 基于 HEAD 的新分支
+- 仓库的隔离副本
+- 退出时可保留或移除
+
+### ExitWorktree
+离开 worktree 会话：
+- **keep** — 保留 worktree 和分支在磁盘上
+- **remove** — 删除 worktree 和分支
