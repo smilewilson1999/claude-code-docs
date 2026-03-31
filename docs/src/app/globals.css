@@ -1,0 +1,25 @@
+/* Mermaid diagrams — readable sizing with scroll for wide charts */
+.mermaid-diagram {
+  display: flex;
+  justify-content: center;
+}
+
+.mermaid-diagram svg {
+  height: auto;
+  min-height: 200px;
+}
+
+/* Lightbox SVG fills viewport */
+.mermaid-lightbox-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 90vw;
+  max-height: 90vh;
+}
+
+.mermaid-lightbox-content svg {
+  max-width: 90vw;
+  height: auto;
+  max-height: 85vh;
+}

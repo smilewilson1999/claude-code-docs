@@ -1,0 +1,49 @@
+---
+title: Vim Mode
+---
+
+# Vim Mode
+
+**Source**: `src/vim/` (6 files)
+
+## Overview
+
+Claude Code supports vim-style modal editing for the input area. When enabled, users can use familiar vim motions, operators, and text objects.
+
+## Files
+
+| File | Purpose |
+|------|---------|
+| `motions.ts` | Movement commands (h, j, k, l, w, b, e, etc.) |
+| `operators.ts` | Operator commands (d, c, y, etc.) |
+| `textObjects.ts` | Text objects (iw, aw, i", a", etc.) |
+
+## Activation
+
+Vim mode is toggled via the `/vim` command. When active:
+
+- **Normal mode** — Navigate and execute commands
+- **Insert mode** — Type text (entered via `i`, `a`, `o`, etc.)
+- **Visual mode** — Select text for operations
+
+## Supported Features
+
+### Motions
+- Character: `h`, `l`
+- Word: `w`, `b`, `e`, `W`, `B`, `E`
+- Line: `0`, `$`, `^`
+- Search: `f`, `F`, `t`, `T`
+
+### Operators
+- Delete: `d`, `dd`, `D`
+- Change: `c`, `cc`, `C`
+- Yank: `y`, `yy`, `Y`
+
+### Text Objects
+- Word: `iw`, `aw`
+- Quotes: `i"`, `a"`, `i'`, `a'`
+- Brackets: `i(`, `a(`, `i{`, `a{`
+
+## Integration
+
+Vim mode integrates with the keybinding system (`src/keybindings/`) and the input handling hooks (`src/hooks/`) to intercept and process keystrokes before they reach the default input handler.

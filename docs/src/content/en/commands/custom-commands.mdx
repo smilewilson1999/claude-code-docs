@@ -1,0 +1,62 @@
+---
+title: Custom Commands
+---
+
+# Custom Commands
+
+Claude Code supports extending the command system with custom commands.
+
+## Command Interface
+
+Each command module exports a command definition:
+
+```typescript
+export default {
+  name: "my-command",
+  description: "Brief description of what the command does",
+  options: [
+    {
+      name: "--flag",
+      description: "An optional flag",
+    },
+  ],
+  handler: async (args, context) => {
+    // Command implementation
+  },
+};
+```
+
+## Registration
+
+Commands in the `src/commands/` directory are auto-discovered by the command registry. Each subdirectory is treated as a command module.
+
+```
+src/commands/
+├── my-command/
+│   └── index.ts    # Command definition
+├── commit/
+│   └── index.ts
+└── ...
+```
+
+## Command Context
+
+The handler function receives a context object with access to:
+
+- **State** — Current application state
+- **Tools** — Available tool instances
+- **API** — Claude API client
+- **Config** — User configuration
+- **History** — Session history
+
+## Feature-Gated Commands
+
+Some commands are conditionally registered based on feature flags:
+
+```typescript
+if (feature("BRIDGE_MODE")) {
+  registerCommand(bridgeCommand);
+}
+```
+
+This ensures feature-gated commands are only available when their corresponding feature is enabled.

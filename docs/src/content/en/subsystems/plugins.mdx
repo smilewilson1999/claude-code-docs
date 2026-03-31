@@ -1,0 +1,37 @@
+---
+title: Plugin System
+---
+
+# Plugin System
+
+**Source**: `src/plugins/` — `builtinPlugins.ts`, `bundled/`
+
+## Overview
+
+The plugin system provides an extension point for adding functionality to Claude Code beyond what tools and skills offer. Plugins can hook into the application lifecycle and modify behavior.
+
+## Architecture
+
+Plugins are registered through `builtinPlugins.ts` and loaded during application initialization. Each plugin can:
+
+- Register new tools
+- Add event listeners
+- Modify the rendering pipeline
+- Extend the command system
+
+## Bundled Plugins
+
+Bundled plugins are shipped with Claude Code in `src/plugins/bundled/`. These provide core functionality that is implemented as plugins for modularity.
+
+## Plugin API
+
+Plugins interact with Claude Code through a defined API that provides access to:
+
+- Application state
+- Tool registry
+- Event system
+- Configuration
+
+## Relationship to MCP
+
+While MCP servers provide external tool integration via a standardized protocol, plugins operate within the Claude Code process itself. Plugins have deeper access to the application internals compared to MCP servers.

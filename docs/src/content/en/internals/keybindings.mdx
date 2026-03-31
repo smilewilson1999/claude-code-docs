@@ -1,0 +1,63 @@
+---
+title: Keybindings
+---
+
+# Keybindings
+
+**Source**: `src/keybindings/` (16 files)
+
+## Overview
+
+Claude Code has a comprehensive keybinding system that supports default shortcuts, custom overrides, and chord sequences.
+
+## Configuration
+
+Custom keybindings are defined in `~/.claude/keybindings.json`:
+
+```json
+[
+  {
+    "key": "ctrl+s",
+    "command": "submit"
+  },
+  {
+    "key": "ctrl+k ctrl+c",
+    "command": "clear"
+  }
+]
+```
+
+## Default Keybindings
+
+| Key | Action |
+|-----|--------|
+| `Enter` | Submit input |
+| `Ctrl+C` | Cancel/interrupt |
+| `Ctrl+D` | Exit |
+| `Up/Down` | Navigate history |
+| `Tab` | Auto-complete |
+| `Escape` | Cancel current action |
+
+## Chord Sequences
+
+Keybindings support chord sequences (multi-key combinations):
+
+```
+ctrl+k ctrl+c  — Two-step chord
+```
+
+The keybinding system waits for the complete chord before executing the command.
+
+## Implementation
+
+The keybinding system includes:
+
+- **Registration** — Commands register their keybindings
+- **Matching** — Input events are matched against registered bindings
+- **Priority** — More specific bindings take precedence
+- **Contexts** — Bindings can be context-dependent (e.g., vim mode vs normal mode)
+
+## Related Hooks
+
+- `useGlobalKeybindings` — Register application-wide shortcuts
+- `useCommandKeybindings` — Register command-specific shortcuts

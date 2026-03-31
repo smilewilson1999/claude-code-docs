@@ -1,0 +1,58 @@
+---
+title: Bash Tool
+---
+
+# Bash Tool
+
+**Source**: `src/tools/BashTool/`
+
+## Overview
+
+The Bash Tool executes shell commands in the user's environment. It is one of the most frequently used tools, enabling Claude Code to run builds, tests, git operations, and arbitrary shell commands.
+
+## Parameters
+
+- **command** — The shell command to execute
+- **description** — Human-readable description of the command
+- **timeout** — Optional timeout in milliseconds (max 600,000ms / 10 minutes)
+- **run_in_background** — Run asynchronously without blocking
+
+## Execution Model
+
+Commands are executed in a persistent shell session:
+
+- Working directory persists between commands
+- Shell state (environment variables, aliases) does NOT persist between calls
+- Shell is initialized from the user's profile (bash or zsh)
+
+## Security
+
+The Bash Tool implements multiple safety measures:
+
+- **Permission gating** — User must approve command execution
+- **Sandboxing** — Commands run within configured sandbox boundaries
+- **Timeout enforcement** — Prevents runaway processes
+- **Description requirement** — AI must describe what the command does
+
+## Background Execution
+
+With `run_in_background: true`:
+
+- Command runs asynchronously
+- User is notified when complete
+- Output can be retrieved via `TaskOutput`
+- Useful for long-running processes (dev servers, builds)
+
+## Progress Streaming
+
+Command output is streamed in real-time via `BashProgress` events, allowing the user to see output as it is produced.
+
+## Best Practices
+
+The system prompt instructs the AI to:
+
+- Use dedicated tools (Read, Edit, Grep, Glob) instead of shell equivalents when available
+- Quote file paths with spaces
+- Use absolute paths to avoid cd-related issues
+- Chain dependent commands with `&&`
+- Avoid destructive operations without user confirmation

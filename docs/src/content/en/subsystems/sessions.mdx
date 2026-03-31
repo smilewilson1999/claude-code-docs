@@ -1,0 +1,57 @@
+---
+title: Session Management
+---
+
+# Session Management
+
+**Source**: `src/history.ts` (464 lines)
+
+## Overview
+
+Claude Code maintains session history to enable resuming conversations, exporting transcripts, and managing multiple sessions.
+
+## Session Storage
+
+Sessions are stored locally and include:
+
+- Conversation messages (user, assistant, system)
+- Tool call history and results
+- Timestamps and metadata
+- Token usage statistics
+
+## Resume
+
+Resume a previous session:
+
+```bash
+claude --resume
+```
+
+This restores the full conversation context, including tool results and AI state.
+
+## Session Commands
+
+| Command | Description |
+|---------|-------------|
+| `/session` | Session management utilities |
+| `/resume` | Resume a specific session |
+| `/clear` | Start a fresh session |
+| `/compact` | Compress current session context |
+
+## Context Compaction
+
+The `/compact` command compresses the conversation history to free up context window space while preserving essential information. This is useful for long sessions that approach the context limit.
+
+## Export
+
+Sessions can be exported for sharing or archival purposes. The export includes the full conversation transcript with tool interactions.
+
+## History Management
+
+`src/history.ts` provides APIs for:
+
+- Listing available sessions
+- Loading a specific session
+- Saving current session state
+- Pruning old sessions
+- Searching session history

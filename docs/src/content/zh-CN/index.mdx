@@ -1,0 +1,46 @@
+---
+title: Claude Code — 源码架构指南
+---
+
+# Claude Code
+
+一个运行在终端中的 AI 编程助手，基于 TypeScript 和 React (Ink) 构建。
+
+## 概览
+
+| 指标 | 数量 |
+|------|------|
+| CLI 命令 | 103+ |
+| 内置工具 | 45+ |
+| React Hooks | 87+ |
+| 主要模块 | 39 |
+| 工具函数 | 298+ |
+
+## 文档目录
+
+### [架构设计](/zh-CN/architecture)
+高层设计：入口点、查询引擎、状态管理、终端 UI 和特性标志。
+
+### [命令系统](/zh-CN/commands)
+命令系统：103+ 内置命令、斜杠命令和自定义命令扩展。
+
+### [工具系统](/zh-CN/tools)
+45+ 开发工具：文件操作、Bash 执行、多代理委派、MCP 集成和权限系统。
+
+### [子系统](/zh-CN/subsystems)
+主要子系统：MCP、技能、插件、远程桥接、Vim 模式、协调器和会话管理。
+
+### [服务层](/zh-CN/services)
+服务层：API 通信、分析、LSP 集成和 OAuth。
+
+### [内部实现](/zh-CN/internals)
+深度实现：Ink 渲染引擎、React Hooks 目录、键绑定、工具函数、记忆文件和常量配置。
+
+## 技术栈
+
+- **运行时**: Bun / Node.js
+- **语言**: TypeScript (strict 模式)
+- **UI 框架**: 基于自定义 Ink 引擎的 React
+- **AI 后端**: Claude API (流式传输)
+- **扩展协议**: Model Context Protocol (MCP)
+- **构建**: Bun bundler，支持特性标志死代码消除

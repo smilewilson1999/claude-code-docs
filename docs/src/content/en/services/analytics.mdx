@@ -1,0 +1,41 @@
+---
+title: Analytics
+---
+
+# Analytics
+
+**Source**: `src/services/analytics/`
+
+## Overview
+
+Claude Code collects privacy-respecting usage analytics to improve the product. The analytics service integrates with GrowthBook for feature flag evaluation and A/B testing.
+
+## Components
+
+### Telemetry
+Anonymous usage metrics including:
+- Session duration
+- Tool usage frequency
+- Error rates
+- Feature adoption
+
+### GrowthBook Integration
+GrowthBook provides:
+- Feature flag evaluation
+- A/B test assignment
+- Gradual rollout management
+
+### Event Logging
+Structured event logging for:
+- User actions
+- Tool executions
+- Error occurrences
+- Performance metrics
+
+## Privacy
+
+All analytics are:
+- Anonymous — No personally identifiable information
+- Opt-out capable — Users can disable telemetry
+- Aggregated — Individual data is not stored
+- Minimal — Only essential metrics are collected

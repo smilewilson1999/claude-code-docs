@@ -1,0 +1,33 @@
+---
+title: LSP Integration
+---
+
+# LSP Integration
+
+**Source**: `src/services/lsp/`
+
+## Overview
+
+Claude Code integrates with Language Server Protocol (LSP) servers to provide code intelligence features like go-to-definition, find references, and diagnostics.
+
+## Capabilities
+
+LSP integration enables:
+
+- **Code Navigation** — Jump to definitions and references
+- **Diagnostics** — Error and warning detection
+- **Completions** — Code completion suggestions
+- **Hover Info** — Type information on hover
+
+## Plugin Recommendations
+
+The `useLspPluginRecommendation` hook (`src/hooks/useLspPluginRecommendation.tsx`) suggests relevant LSP plugins based on the project's language and framework.
+
+## Architecture
+
+The LSP service:
+
+1. Detects available language servers in the environment
+2. Connects to running LSP servers
+3. Provides tool-accessible APIs for code intelligence
+4. Caches results for performance

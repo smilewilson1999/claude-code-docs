@@ -1,0 +1,59 @@
+---
+title: Feature Flags
+---
+
+# Feature Flags
+
+**Source**: `src/main.tsx` (feature flag initialization) and various conditional imports
+
+## Overview
+
+Claude Code uses build-time feature flags for dead-code elimination. When a feature is disabled at build time, all code paths for that feature are completely removed from the bundle by the Bun bundler.
+
+## Mechanism
+
+Feature flags are evaluated via a `feature()` function call pattern:
+
+```typescript
+if (feature("COORDINATOR_MODE")) {
+  // This entire block is removed from the bundle
+  // when COORDINATOR_MODE is disabled
+  import("./coordinator/coordinatorMode");
+}
+```
+
+The Bun bundler treats `feature()` calls as compile-time constants, enabling tree-shaking of disabled feature branches.
+
+## Known Feature Flags
+
+| Flag | Description |
+|------|-------------|
+| `KAIROS` | Assistant mode — alternative interaction pattern |
+| `COORDINATOR_MODE` | Multi-agent coordinator for parallel task execution |
+| `BRIDGE_MODE` | Remote session bridge for cloud execution |
+| `VOICE_MODE` | Voice input/output capabilities |
+| `Chicago_MCP` | Computer use via MCP |
+| `DAEMON` | Background daemon worker processes |
+| `WORKFLOW_SCRIPTS` | Workflow scripting system |
+| `PROACTIVE` | Proactive suggestions and actions |
+
+## Impact on Architecture
+
+Feature flags affect:
+
+1. **Entry points** — Conditional imports in `main.tsx` and `cli.tsx`
+2. **Commands** — Feature-gated commands only registered when their flag is active
+3. **Components** — UI elements conditionally rendered
+4. **Services** — Service modules loaded only when needed
+
+## Build Variants
+
+Different builds can enable different flag combinations, producing separate bundles optimized for each deployment target. This keeps the base bundle small while supporting advanced features in specialized builds.
+
+## Runtime vs Build-Time
+
+Most feature flags are evaluated at **build time** for optimal bundle size. However, some flags can also be evaluated at **runtime** via:
+
+- Environment variables
+- Configuration files
+- GrowthBook (A/B testing service) integration in `src/services/analytics/`

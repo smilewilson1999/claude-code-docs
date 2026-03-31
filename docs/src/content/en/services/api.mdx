@@ -1,0 +1,53 @@
+---
+title: API Service
+---
+
+# API Service
+
+**Source**: `src/services/api/`
+
+## Overview
+
+The API service manages all communication with the Claude AI backend. It handles request construction, streaming responses, error recovery, and rate limiting.
+
+## Key Files
+
+| File | Purpose |
+|------|---------|
+| `bootstrap.ts` | API client initialization |
+| `filesApi.ts` | File upload API |
+| `logging.ts` | Request/response logging |
+| `rateLimiting.ts` | Rate limit handling |
+
+## Features
+
+### Streaming
+All AI responses are streamed token-by-token. The API service processes Server-Sent Events (SSE) from the Claude API to deliver real-time output.
+
+### Multi-Provider Support
+The API service supports multiple AI providers:
+
+| Provider | Environment Variable |
+|----------|---------------------|
+| Anthropic API | `ANTHROPIC_API_KEY` |
+| AWS Bedrock | `CLAUDE_CODE_USE_BEDROCK` |
+| Google Vertex | `CLAUDE_CODE_USE_VERTEX` |
+
+### Rate Limiting
+`rateLimiting.ts` implements exponential backoff and retry logic for handling API rate limits gracefully.
+
+### Request Construction
+The service assembles complete API requests including:
+- System prompt
+- Conversation history
+- Tool definitions
+- Model selection
+- Token limits
+
+### Error Handling
+Robust error handling for:
+- Network failures
+- Authentication errors
+- Rate limit responses
+- Malformed responses
+- Timeout conditions

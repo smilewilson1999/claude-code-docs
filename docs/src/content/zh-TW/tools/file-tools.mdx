@@ -1,0 +1,80 @@
+---
+title: 檔案工具
+---
+
+# 檔案工具
+
+**原始碼**: `src/tools/FileReadTool/`、`src/tools/FileEditTool/`、`src/tools/FileWriteTool/`、`src/tools/GlobTool/`、`src/tools/GrepTool/`
+
+## FileReadTool (Read)
+
+從檔案系統讀取檔案內容。
+
+**引數：**
+- `file_path` — 檔案的絕對路徑
+- `offset` — 起始行號（可選）
+- `limit` — 讀取的行數（可選）
+
+**特性：**
+- 返回帶行號的內容（cat -n 格式）
+- 支援圖片（PNG、JPG）— 以視覺方式呈現
+- 支援 PDF 頁面範圍選擇
+- 支援 Jupyter 筆記本（.ipynb）
+- 預設限制：2000 行
+
+## FileEditTool (Edit)
+
+在檔案中執行精確的字串替換。
+
+**引數：**
+- `file_path` — 檔案的絕對路徑
+- `old_string` — 要查詢的文字（在檔案中必須唯一）
+- `new_string` — 替換文字
+- `replace_all` — 替換所有出現（可選，預設 false）
+
+**關鍵行為：**
+- 要求在對話中先讀取過該檔案
+- 如果 `old_string` 不唯一則失敗（需提供更多上下文）
+- 保留精確的縮排
+
+## FileWriteTool (Write)
+
+建立新檔案或完全重寫現有檔案。
+
+**引數：**
+- `file_path` — 絕對路徑（必須是絕對路徑）
+- `content` — 完整檔案內容
+
+**關鍵行為：**
+- 覆蓋現有檔案
+- 要求先讀取過現有檔案
+- 適用於新檔案；修改現有檔案時優先使用 Edit
+
+## GlobTool (Glob)
+
+快速檔案模式匹配。
+
+**引數：**
+- `pattern` — Glob 模式（如 `"**/*.ts"`、`"src/**/*.tsx"`）
+- `path` — 搜尋目錄（可選）
+
+**特性：**
+- 適用於任意大小的程式碼庫
+- 結果按修改時間排序
+- 支援標準 glob 模式
+
+## GrepTool (Grep)
+
+基於 ripgrep 的內容搜尋。
+
+**引數：**
+- `pattern` — 搜尋的正規表示式
+- `path` — 搜尋的檔案或目錄（可選）
+- `glob` — 檔案模式過濾（如 `"*.js"`）
+- `output_mode` — `"content"`、`"files_with_matches"` 或 `"count"`
+
+**特性：**
+- 完整正規表示式語法支援
+- 檔案型別過濾
+- 上下文行（-A、-B、-C）
+- 多行匹配支援

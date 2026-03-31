@@ -1,0 +1,42 @@
+---
+title: 技能系统
+---
+
+# 技能系统
+
+**源码**: `src/skills/` — `bundledSkills.ts`、`loadSkillsDir.ts`、`bundled/`
+
+## 概述
+
+技能是扩展的命令定义，将提示词、工具配置和工作流打包为可重用的单元。可以通过斜杠命令调用。
+
+## 内置技能
+
+Claude Code 在 `src/skills/bundled/` 中附带 17+ 个内置技能：
+
+| 技能 | 描述 |
+|------|------|
+| `commit` | AI 辅助的 git 提交 |
+| `claude-api` | 使用 Claude API/SDK 构建应用 |
+| `keybindings` | 自定义键盘快捷键 |
+| `simplify` | 审查和简化代码 |
+| `loop` | 按循环间隔运行命令 |
+| `remember` | 保存信息到记忆 |
+| `skillify` | 创建新技能 |
+| `batch` | 批量操作 |
+
+## 技能加载
+
+技能从两个来源加载：
+
+1. **内置**（`bundledSkills.ts`）— 内建于应用中
+2. **自定义**（`loadSkillsDir.ts`）— 从用户的技能目录加载
+
+## 调用
+
+技能通过 Skill 工具或斜杠命令调用：
+
+```
+/commit        # 调用 commit 技能
+/simplify      # 调用 simplify 技能
+```

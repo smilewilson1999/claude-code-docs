@@ -1,0 +1,60 @@
+---
+title: MCP Tool
+---
+
+# MCP Tool
+
+**Source**: `src/tools/MCPTool/` and `src/services/mcp/`
+
+## Overview
+
+The MCP Tool bridges Claude Code with external tool servers via the Model Context Protocol (MCP). This enables third-party tools and services to be used as native Claude Code tools.
+
+## How It Works
+
+1. MCP servers are configured by the user (in settings or CLAUDE.md)
+2. On startup, Claude Code connects to configured MCP servers
+3. Each server's tools are registered as available tools
+4. When the AI calls an MCP tool, the request is forwarded to the server
+5. The server's response is returned as the tool result
+
+## MCP Server Configuration
+
+MCP servers can be configured in:
+
+- `~/.claude/settings.json` — Global MCP servers
+- Project `.claude/settings.json` — Project-specific servers
+- `CLAUDE.md` — Inline MCP server definitions
+
+## Tool Naming
+
+MCP tools are namespaced with their server name:
+
+```
+mcp__<server-name>__<tool-name>
+```
+
+For example: `mcp__github__create_issue`
+
+## Transport Types
+
+The MCP client supports multiple transport mechanisms:
+
+- **stdio** — Communication via standard input/output
+- **SSE** — Server-Sent Events over HTTP
+- **In-process** — Direct function calls (for built-in MCP servers)
+
+## Authentication
+
+MCP server authentication is handled via `src/services/mcp/auth.ts`, supporting:
+
+- API key-based auth
+- OAuth flows
+- Custom authentication schemes
+
+## Resources and Prompts
+
+Beyond tools, MCP servers can also provide:
+
+- **Resources** — Data that can be read (files, databases, APIs)
+- **Prompts** — Pre-defined prompt templates

@@ -1,0 +1,72 @@
+---
+title: Utilities
+---
+
+# Utilities
+
+**Source**: `src/utils/` (298+ files)
+
+## Overview
+
+Claude Code has an extensive utility library covering git operations, shell interaction, configuration management, authentication, file operations, and more.
+
+## Key Categories
+
+### Git Utilities
+Git integration for repository analysis and operations:
+- Repository detection and status
+- Branch management
+- Diff generation
+- Commit history
+
+### Bash Utilities
+Shell interaction helpers:
+- Command execution
+- Output parsing
+- Environment detection
+- Shell initialization
+
+### Configuration Utilities
+Settings management:
+- Config file reading/writing
+- Settings migration
+- Default value management
+- Validation
+
+### Authentication Utilities
+Auth support:
+- Token management
+- Credential storage
+- Provider detection
+
+### File Utilities
+File system operations:
+- Path resolution
+- File type detection
+- Content hashing
+- Temporary file management
+
+### Analysis Utilities
+Code analysis helpers:
+- Language detection
+- Project type inference
+- Dependency analysis
+
+### Storage Utilities
+Data persistence:
+- Local storage management
+- Cache operations
+- Session data
+
+## Organization
+
+Utilities are organized as individual modules, each focused on a specific concern. Most utilities are pure functions with no side effects, making them easy to test and reuse.
+
+## Usage Pattern
+
+Utilities are imported directly by the modules that need them:
+
+```typescript
+import { getGitStatus } from "@/utils/git";
+import { parseConfig } from "@/utils/config";
+```

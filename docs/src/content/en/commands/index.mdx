@@ -1,0 +1,44 @@
+---
+title: Command System
+---
+
+# Command System
+
+**Source**: `src/commands.ts` (754 lines) and `src/commands/` (103+ subdirectories)
+
+## Overview
+
+Claude Code has 103+ CLI commands organized as a registry. Commands can be invoked via slash syntax (`/command`) in the REPL or as CLI subcommands (`claude command`).
+
+## Command Registry
+
+The command registry (`src/commands.ts`) manages:
+
+- **Registration** — Commands register themselves with name, description, and handler
+- **Discovery** — Commands are auto-discovered from the `src/commands/` directory
+- **Resolution** — User input is matched to registered commands
+- **Execution** — Commands are invoked with parsed arguments
+
+## Command Structure
+
+Each command is a directory under `src/commands/` containing at minimum an entry file that exports:
+
+- **name** — Command identifier (used in `/name` syntax)
+- **description** — Brief help text
+- **handler** — Async function that executes the command
+- **options** — CLI argument definitions (optional)
+
+## Command Categories
+
+Commands are grouped by function:
+
+- **Git** — `/commit`, `/diff`, `/commit-push-pr`
+- **Session** — `/resume`, `/clear`, `/compact`, `/session`
+- **Configuration** — `/config`, `/theme`, `/color`, `/login`, `/logout`
+- **Development** — `/doctor`, `/debug-tool-call`, `/autofix-pr`
+- **Navigation** — `/add-dir`, `/ide`, `/desktop`
+- **Information** — `/cost`, `/help`, `/brief`
+- **Extensions** — `/mcp`, `/skills`, `/agents`
+- **Editing** — `/vim`, `/voice`
+
+See [Built-in Commands](/en/commands/builtin-commands) for the complete reference.

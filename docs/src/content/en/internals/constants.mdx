@@ -1,0 +1,61 @@
+---
+title: Constants
+---
+
+# Constants
+
+**Source**: `src/constants/` (23+ subdirectories)
+
+## Overview
+
+The constants directory contains configuration values, prompt templates, model definitions, and theme specifications used throughout Claude Code.
+
+## System Prompts
+
+System prompts define Claude Code's behavior and instructions. They include:
+
+- Base personality and capabilities
+- Tool usage instructions
+- Safety guidelines
+- Output formatting rules
+
+## Model Configuration
+
+Model definitions specify:
+
+| Parameter | Description |
+|-----------|-------------|
+| Model ID | Claude model identifier |
+| Context window | Maximum token capacity |
+| Max output | Maximum response tokens |
+| Capabilities | Supported features (vision, tools, etc.) |
+
+## Theme Definitions
+
+Theme files in `src/constants/themes/` define:
+
+- Color schemes (light/dark)
+- Syntax highlighting colors
+- UI element colors
+- Status indicator colors
+
+## Prompt Templates
+
+Reusable prompt templates for:
+
+- Commit message generation
+- Code review
+- Error explanation
+- Refactoring suggestions
+
+## Organization
+
+Constants are organized by domain:
+
+```
+src/constants/
+├── prompts/        # System and user prompts
+├── models/         # Model definitions
+├── themes/         # Color themes
+└── ...             # Other configuration
+```

@@ -1,0 +1,62 @@
+---
+title: 自定义命令
+---
+
+# 自定义命令
+
+Claude Code 支持通过自定义命令扩展命令系统。
+
+## 命令接口
+
+每个命令模块导出一个命令定义：
+
+```typescript
+export default {
+  name: "my-command",
+  description: "命令功能的简要描述",
+  options: [
+    {
+      name: "--flag",
+      description: "一个可选标志",
+    },
+  ],
+  handler: async (args, context) => {
+    // 命令实现
+  },
+};
+```
+
+## 注册
+
+`src/commands/` 目录中的命令由命令注册表自动发现。每个子目录被视为一个命令模块。
+
+```
+src/commands/
+├── my-command/
+│   └── index.ts    # 命令定义
+├── commit/
+│   └── index.ts
+└── ...
+```
+
+## 命令上下文
+
+处理器函数接收一个上下文对象，可以访问：
+
+- **State** — 当前应用状态
+- **Tools** — 可用工具实例
+- **API** — Claude API 客户端
+- **Config** — 用户配置
+- **History** — 会话历史
+
+## 特性门控命令
+
+一些命令根据特性标志条件注册：
+
+```typescript
+if (feature("BRIDGE_MODE")) {
+  registerCommand(bridgeCommand);
+}
+```
+
+这确保特性门控命令仅在对应特性启用时可用。
