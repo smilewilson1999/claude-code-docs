@@ -1,0 +1,167 @@
+---
+title: 权限 Hooks
+---
+
+import { Mermaid } from "@/components/mermaid";
+
+# 权限 Hooks
+
+**源码**: `src/hooks/toolPermission/`
+
+## 概述
+
+权限 hooks 管理工具执行的完整权限生命周期：从同步缓存检查到异步用户审批，再到结果缓存。它们是 Claude Code 安全模型在 UI 层的核心实现。
+
+## 权限 Hook 架构
+
+<Mermaid chart={`
+flowchart TB
+    C[组件] -->|调用| UCT[useCanUseTool]
+    C -->|调用| UTP[useToolPermission]
+    UCT -->|读取| Cache[权限缓存]
+    UTP -->|读取| Cache
+    UTP -->|未命中| PM[权限管理器]
+    PM -->|检查| Policy[策略引擎]
+    PM -->|需要审批| Prompt[用户提示]
+    Prompt -->|结果| Cache
+    Policy -->|结果| Cache
+`} />
+
+## useCanUseTool
+
+同步检查工具是否可以执行，不触发用户交互。适用于 UI 渲染时判断按钮状态。
+
+### 函数签名
+
+```typescript
+function useCanUseTool(toolName: string): {
+  canUse: boolean;        // 是否允许执行
+  reason: string | null;  // 拒绝原因
+  isLoading: boolean;     // 是否正在检查
+}
+```
+
+### 返回值说明
+
+| 字段 | 类型 | 描述 |
+|------|------|------|
+| `canUse` | `boolean` | `true` 表示工具已获得权限 |
+| `reason` | `string \| null` | 拒绝时的原因说明 |
+| `isLoading` | `boolean` | 首次加载缓存时为 `true` |
+
+### 检查逻辑
+
+1. 查询本地权限缓存
+2. 缓存命中且未过期 → 立即返回
+3. 缓存未命中 → 返回 `isLoading: true`，后台触发完整检查
+4. 检查完成后更新缓存并重新渲染
+
+## 权限状态机
+
+<Mermaid chart={`
+stateDiagram-v2
+    [*] --> 未检查
+    未检查 --> 检查中: 首次调用
+    检查中 --> 已允许: 策略允许
+    检查中 --> 需审批: 需要用户确认
+    检查中 --> 已拒绝: 策略拒绝
+    需审批 --> 等待用户: 显示提示
+    等待用户 --> 已允许: 用户批准
+    等待用户 --> 已拒绝: 用户拒绝
+    已允许 --> 已缓存: 写入缓存
+    已拒绝 --> 已缓存: 写入缓存
+    已缓存 --> 检查中: 缓存失效
+`} />
+
+## useToolPermission
+
+完整的权限检查流程 hook，包含用户交互。用于实际执行工具时。
+
+### 函数签名
+
+```typescript
+function useToolPermission(toolName: string): {
+  status: PermissionStatus;
+  requestPermission: () => Promise<boolean>;
+  revokePermission: () => void;
+}
+
+type PermissionStatus =
+  | "granted"      // 已授权
+  | "denied"       // 已拒绝
+  | "pending"      // 等待检查
+  | "prompting";   // 正在提示用户
+```
+
+### 状态形状
+
+```typescript
+interface PermissionState {
+  toolName: string;
+  status: PermissionStatus;
+  grantedAt: number | null;    // 授权时间戳
+  expiresAt: number | null;    // 过期时间戳
+  scope: "once" | "session" | "permanent";
+  grantedBy: "policy" | "user";
+}
+```
+
+### 权限检查流程
+
+1. **策略检查**：查询 `permissions.json` 和 `.claude/settings.json` 中的规则
+2. **缓存查询**：检查运行时缓存中是否有有效记录
+3. **用户提示**：缓存未命中时显示权限请求对话框
+4. **结果记录**：将用户决定写入缓存，按 `scope` 设置过期
+
+### 用户提示集成
+
+当工具需要用户审批时，hook 触发提示组件：
+
+```typescript
+// 提示信息结构
+interface PermissionPrompt {
+  toolName: string;
+  description: string;       // 工具要执行的操作描述
+  risk: "low" | "medium" | "high";
+  options: ["允许一次", "本次会话允许", "始终允许", "拒绝"];
+}
+```
+
+## 缓存失效
+
+权限缓存在以下情况下失效：
+
+| 触发条件 | 说明 |
+|----------|------|
+| 会话结束 | `scope: "session"` 的权限被清除 |
+| 时间过期 | 超过 `expiresAt` 时间戳 |
+| 配置变更 | `permissions.json` 文件被修改 |
+| 手动撤销 | 调用 `revokePermission()` |
+| 工具变更 | 工具定义更新后旧权限失效 |
+
+## Hook 依赖链
+
+```
+useToolPermission
+├── useCanUseTool (同步检查)
+├── usePermissionCache (缓存读写)
+├── usePermissionPolicy (策略引擎)
+└── usePermissionPrompt (用户提示 UI)
+    ├── useNotification (显示通知)
+    └── useInputFocus (管理焦点)
+```
+
+### 依赖关系说明
+
+- `useCanUseTool` 是轻量级只读 hook，可独立使用
+- `useToolPermission` 聚合所有子 hooks，提供完整流程
+- 提示组件通过 `usePermissionPrompt` 与通知系统集成
+- 缓存层通过 `usePermissionCache` 隔离存储细节
+
+## 设计模式
+
+| 模式 | 应用 |
+|------|------|
+| **旁路缓存** | 先查缓存，未命中时走完整流程并回填缓存 |
+| **状态机** | 权限状态在明确定义的状态之间转换，避免非法组合 |
+| **观察者** | 权限变更时自动通知所有订阅该工具的组件重新渲染 |

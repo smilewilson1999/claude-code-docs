@@ -1,0 +1,148 @@
+---
+title: 权限评估
+---
+
+# 权限评估
+
+**源码**：`src/types/permissions.ts` 和 `src/hooks/toolPermission/`
+
+## 概述
+
+权限评估是工具执行前的关键守门环节。系统通过多阶段管道——模式解析、规则匹配、会话缓存——对每一次工具调用做出允许或拒绝的决策。理解这条管道是掌握权限系统行为的基础。
+
+## 完整决策树
+
+```mermaid
+graph TD
+    A[工具调用请求] --> B{安全规则检查}
+    B -->|命中安全规则| C[强制拒绝]
+    B -->|通过| D{权限模式解析}
+    D -->|YOLO 模式| E[自动批准]
+    D -->|自动批准| F{匹配批准规则?}
+    F -->|匹配| E
+    F -->|不匹配| G{会话缓存查询}
+    D -->|默认模式| G
+    D -->|Plan 模式| H[仅允许只读工具]
+    G -->|缓存命中: 允许| E
+    G -->|缓存命中: 拒绝| C
+    G -->|缓存未命中| I{权限 Hook}
+    I -->|Hook 决策: 允许| J[缓存 + 执行]
+    I -->|Hook 决策: 拒绝| K[缓存 + 拒绝]
+    I -->|无 Hook / 无决策| L{用户提示}
+    L -->|允许一次| E
+    L -->|允许整个会话| J
+    L -->|拒绝| C
+```
+
+## 权限模式
+
+系统支持四种权限模式，按优先级从高到低排列：
+
+| 模式 | 触发方式 | 行为 |
+|------|---------|------|
+| **YOLO 模式** | `--dangerously-skip-permissions` | 跳过所有权限检查，全部自动批准 |
+| **Plan 模式** | `--plan` 或 plan 命令 | 仅允许只读工具（Read、Glob、Grep） |
+| **自动批准** | `settings.json` 中的 `allowedTools` | 匹配的工具自动批准，其余走默认流程 |
+| **默认** | 无特殊配置 | 每次工具使用都询问用户 |
+
+### 模式解析
+
+模式通过以下来源解析，优先级递减：
+
+1. **CLI flags** — `--dangerously-skip-permissions`、`--plan`
+2. **环境变量** — `CLAUDE_AUTO_APPROVE_TOOLS`
+3. **settings.json** — `allowedTools` 数组配置
+4. **默认值** — 未配置时使用默认模式
+
+## 规则匹配
+
+`allowedTools` 中的规则支持三种匹配模式：
+
+```typescript
+// 精确匹配
+"Bash(npm test)"
+
+// Glob 模式
+"Edit(**/src/**)"
+
+// 正则表达式
+"Bash(/^git (status|log|diff)/)"
+```
+
+匹配按顺序进行，首条命中的规则决定结果。如果没有规则命中，回退到默认行为（询问用户）。
+
+规则匹配的输入不仅是工具名称，还包含工具参数的序列化形式。例如 `Bash(npm test)` 表示工具名为 `Bash`、命令参数为 `npm test` 的调用。
+
+## 会话缓存
+
+当用户选择"允许整个会话"时，该决策被缓存以避免重复询问：
+
+### 缓存键结构
+
+```
+工具名称 + 参数哈希 → 缓存决策
+```
+
+缓存键由工具名称和参数的标准化哈希组成。相同工具、相同参数的调用复用同一缓存条目。
+
+### 缓存决策流程
+
+```mermaid
+sequenceDiagram
+    participant T as 工具调用
+    participant C as 缓存层
+    participant U as 用户提示
+
+    T->>C: 查询缓存 (工具名 + 参数哈希)
+    alt 缓存命中
+        C-->>T: 返回缓存决策 (允许/拒绝)
+    else 缓存未命中
+        C-->>T: 未找到
+        T->>U: 显示权限对话框
+        U-->>T: 用户选择
+        alt 允许整个会话
+            T->>C: 写入缓存 (允许)
+        else 拒绝
+            T->>C: 写入缓存 (拒绝)
+        else 允许一次
+            Note over T,C: 不写入缓存
+        end
+    end
+```
+
+### 缓存失效
+
+缓存在以下场景下失效：
+
+- **会话结束** — 缓存仅存活于当前会话
+- **权限模式变更** — 切换模式时清空缓存
+- **手动重置** — 用户可通过 `/permissions` 命令重置
+
+## 权限上下文
+
+每次权限检查携带完整的上下文信息：
+
+```typescript
+interface ToolPermissionContext {
+  toolName: string;           // 工具名称
+  toolParameters: unknown;    // 工具参数
+  isReadOnly: boolean;        // 是否为只读操作
+  action: string;             // 具体动作描述
+  previousDecisions: Map<string, Decision>; // 历史决策缓存
+  permissionMode: PermissionMode;           // 当前权限模式
+}
+```
+
+这个上下文对象贯穿整个评估管道，每个阶段都可以读取并基于此做出决策。
+
+## 设计模式
+
+- **责任链** — 评估管道的各阶段（安全规则 → 模式检查 → 缓存 → Hook → 用户提示）形成责任链，请求沿链传递直到某一环节做出决策
+- **策略模式** — 权限模式作为策略，决定了评估的行为——YOLO 策略全部放行，Plan 策略仅允许只读
+- **旁路缓存** — 会话缓存实现了经典的旁路缓存模式：先查缓存，未命中则执行完整流程并回填缓存
+
+## 相关页面
+
+- [概述](./index) — 工具权限概述
+- [权限 Hooks](./permission-hooks) — Shell hook 执行和自定义策略
+- [安全规则](./safety-rules) — 内置安全规则和破坏性操作检测

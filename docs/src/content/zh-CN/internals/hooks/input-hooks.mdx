@@ -1,0 +1,174 @@
+---
+title: 输入 Hooks
+---
+
+import { Mermaid } from "@/components/mermaid";
+
+# 输入 Hooks
+
+**源码**: `src/hooks/useInputBuffer.ts`、`useArrowKeyHistory.ts`、`useHistorySearch.ts`
+
+## 概述
+
+Claude Code 的终端输入系统由三个核心 hooks 协作完成：文本缓冲区管理、方向键历史导航和反向搜索。它们共同构成了完整的按键处理管道。
+
+## 按键处理管道
+
+<Mermaid chart={`
+sequenceDiagram
+    participant U as 用户按键
+    participant B as useInputBuffer
+    participant A as useArrowKeyHistory
+    participant S as useHistorySearch
+
+    U->>B: 普通字符
+    B->>B: 更新缓冲区和光标
+    U->>A: ↑/↓ 方向键
+    A->>A: 遍历历史记录
+    A->>B: 替换缓冲区内容
+    U->>S: Ctrl+R
+    S->>S: 进入搜索模式
+    S->>A: 匹配历史条目
+    S->>B: 填充匹配结果
+`} />
+
+## useInputBuffer
+
+管理文本输入缓冲区和光标位置，是输入系统的基础层。
+
+### 状态结构
+
+```typescript
+interface InputBufferState {
+  buffer: string;          // 当前文本内容
+  cursorPosition: number;  // 光标在缓冲区中的偏移
+  selection: Range | null; // 可选的选区范围
+}
+```
+
+### 核心操作
+
+| 操作 | 描述 | 触发按键 |
+|------|------|----------|
+| `insert` | 在光标处插入字符 | 普通字符 |
+| `delete` | 删除光标前字符 | Backspace |
+| `deleteForward` | 删除光标后字符 | Delete |
+| `moveCursor` | 移动光标位置 | ←/→ |
+| `moveWord` | 按词移动光标 | Alt+←/→ |
+| `clear` | 清空缓冲区 | Ctrl+U |
+| `setBuffer` | 直接替换整个缓冲区 | 程序调用 |
+
+### 使用方式
+
+```typescript
+const { buffer, cursorPosition, insert, setBuffer } = useInputBuffer();
+```
+
+## useArrowKeyHistory
+
+处理方向键历史导航，在输入历史记录之间前后移动。
+
+### 状态定义
+
+```typescript
+interface HistoryState {
+  entries: string[];    // 历史记录列表
+  currentIndex: number; // 当前浏览位置，-1 表示最新
+  savedDraft: string;   // 临时保存的当前输入
+}
+```
+
+### 导航流程
+
+<Mermaid chart={`
+flowchart LR
+    A[当前输入] -->|按 ↑| B[上一条记录]
+    B -->|按 ↑| C[更早的记录]
+    C -->|按 ↓| B
+    B -->|按 ↓| A
+    A -->|按 ↓| D[无操作]
+    A -->|输入文本| E[保存草稿]
+    E -->|按 ↑| B
+    B -->|按 ↓ 回到底部| E
+`} />
+
+### 关键行为
+
+- **草稿保存**：按 ↑ 前自动保存当前输入，返回时恢复
+- **边界处理**：到达历史顶部时停止，不循环
+- **索引重置**：提交命令后重置到最新位置
+- **去重**：连续相同命令只保留一条
+
+## useHistorySearch
+
+实现 Ctrl+R 反向搜索功能，类似 bash/zsh 的交互式历史搜索。
+
+### 搜索流程
+
+<Mermaid chart={`
+sequenceDiagram
+    participant U as 用户
+    participant S as 搜索状态
+    participant H as 历史记录
+
+    U->>S: Ctrl+R 激活搜索
+    S->>S: 进入搜索模式
+    U->>S: 输入搜索词
+    S->>H: 从最近向最早匹配
+    H-->>S: 返回匹配条目
+    S-->>U: 显示匹配结果
+    U->>S: Ctrl+R（下一个匹配）
+    S->>H: 继续向前搜索
+    U->>S: Enter 确认
+    S->>S: 退出搜索模式
+    S-->>U: 将匹配内容填入缓冲区
+`} />
+
+### 搜索状态
+
+```typescript
+interface SearchState {
+  isActive: boolean;     // 是否处于搜索模式
+  query: string;         // 当前搜索词
+  matchIndex: number;    // 当前匹配在结果中的索引
+  matches: string[];     // 所有匹配的条目
+}
+```
+
+### 操作映射
+
+| 按键 | 操作 |
+|------|------|
+| `Ctrl+R` | 激活搜索 / 跳到下一个匹配 |
+| `Ctrl+S` | 跳到上一个匹配（正向搜索） |
+| `Enter` | 确认选择并退出搜索 |
+| `Escape` | 取消搜索并恢复原始输入 |
+| 普通字符 | 追加到搜索词，实时过滤 |
+
+## Hook 组合
+
+三个 hooks 按层次组合，形成完整的输入处理栈：
+
+```
+┌──────────────────────────────┐
+│     useHistorySearch         │  ← 最高层：搜索控制
+│  ┌────────────────────────┐  │
+│  │  useArrowKeyHistory    │  │  ← 中间层：历史导航
+│  │  ┌──────────────────┐  │  │
+│  │  │  useInputBuffer  │  │  │  ← 基础层：文本缓冲区
+│  │  └──────────────────┘  │  │
+│  └────────────────────────┘  │
+└──────────────────────────────┘
+```
+
+- **useInputBuffer** 提供基础文本编辑能力
+- **useArrowKeyHistory** 消费 `setBuffer` 来替换内容
+- **useHistorySearch** 协调搜索与历史导航的切换
+
+## 设计模式
+
+| 模式 | 应用 |
+|------|------|
+| **状态机** | 搜索模式在激活/非激活之间切换，控制按键解释 |
+| **备忘录** | 草稿保存机制允许撤销历史导航，恢复原始输入 |
+| **组合** | 三层 hooks 各自独立，通过接口组合成完整功能 |

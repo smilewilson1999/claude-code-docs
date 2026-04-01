@@ -1,0 +1,144 @@
+---
+title: Input Hooks
+---
+
+import { Mermaid } from "@/components/mermaid";
+
+# Input Hooks
+
+**Source**: `src/hooks/useInputBuffer.ts`, `src/hooks/useArrowKeyHistory.ts`, `src/hooks/useHistorySearch.ts`
+
+## Overview
+
+Three core hooks manage the terminal input experience in Claude Code. `useInputBuffer` handles keystroke buffering and cursor management, `useArrowKeyHistory` enables navigation through previous commands, and `useHistorySearch` provides Ctrl+R reverse search. Together they form a composable input pipeline that mirrors a full-featured terminal shell.
+
+## Keystroke Processing Pipeline
+
+<Mermaid chart={`sequenceDiagram
+    participant User
+    participant useInputBuffer
+    participant Classifier
+    participant Buffer
+    participant Renderer
+
+    User->>useInputBuffer: Raw keystroke
+    useInputBuffer->>Classifier: Classify keystroke type
+    Classifier-->>useInputBuffer: printable / special / control
+    alt Special key (arrow, ctrl sequence)
+        useInputBuffer->>useInputBuffer: Delegate to handler
+    else Printable character
+        useInputBuffer->>Buffer: Insert at cursor position
+    end
+    Buffer-->>useInputBuffer: Updated state
+    useInputBuffer->>Renderer: Trigger re-render
+    Renderer->>User: Display updated input
+`} />
+
+## useInputBuffer
+
+The central input hook. It manages a text buffer with an associated cursor position, handling character insertion, deletion, cursor movement, and clipboard operations.
+
+**Key State:**
+
+```ts
+{ text: string; cursorPosition: number }
+```
+
+The hook returns the current buffer state plus a set of mutation functions. Every mutation updates both the text content and the cursor position atomically, ensuring the UI never renders an inconsistent state.
+
+### Buffer Operations
+
+| Operation | Description |
+|-----------|-------------|
+| `insert(char)` | Insert character at cursor position, advance cursor by one |
+| `delete(direction)` | Remove character before (backspace) or after (delete) cursor |
+| `moveCursor(direction)` | Move cursor left, right, to start (Home), or to end (End) |
+| `clear()` | Reset buffer to empty string, cursor to position zero |
+| `paste(text)` | Insert multi-character string at cursor, advance cursor by length |
+| `selectAll()` | Mark entire buffer as selected for bulk operations |
+
+Word-level movement (Ctrl+Left/Right) skips to the next word boundary. Ctrl+W deletes the word behind the cursor. These operations use a simple word-boundary detection algorithm that splits on whitespace and common punctuation.
+
+## useArrowKeyHistory
+
+Navigates through command history with the Up and Down arrow keys. The hook maintains a stack of previous inputs and a pointer into that stack.
+
+**Key State:**
+
+```ts
+{ history: string[]; index: number; savedCurrent: string }
+```
+
+When the user presses Up for the first time, the current input is saved into `savedCurrent` so it can be restored later. Each subsequent Up press decrements the index and loads the corresponding history entry into the buffer.
+
+### History Navigation Flow
+
+<Mermaid chart={`flowchart TD
+    A[User presses Up] --> B{First press?}
+    B -->|Yes| C[Save current input to savedCurrent]
+    B -->|No| D[Continue]
+    C --> D
+    D --> E[Decrement index]
+    E --> F[Load history at index into buffer]
+
+    G[User presses Down] --> H[Increment index]
+    H --> I{At end of history?}
+    I -->|Yes| J[Restore savedCurrent to buffer]
+    I -->|No| K[Load history at index into buffer]
+`} />
+
+History entries are deduplicated. Consecutive identical commands produce only one history entry. The history is persisted across sessions via the global state store, so users retain their command history between Claude Code runs.
+
+## useHistorySearch
+
+Provides Ctrl+R style reverse-incremental search through command history. As the user types a search query, the most recent matching history entry is displayed inline.
+
+**Key State:**
+
+```ts
+{ query: string; matches: string[]; selectedIndex: number }
+```
+
+### Search Flow
+
+<Mermaid chart={`sequenceDiagram
+    participant User
+    participant SearchMode
+    participant History
+    participant Buffer
+
+    User->>SearchMode: Press Ctrl+R
+    SearchMode->>SearchMode: Enter search mode
+    loop Each keystroke
+        User->>SearchMode: Type character
+        SearchMode->>History: Filter by substring match
+        History-->>SearchMode: Matching entries
+        SearchMode->>Buffer: Display best match
+    end
+    alt User presses Enter
+        SearchMode->>Buffer: Accept match as input
+    else User presses Escape
+        SearchMode->>Buffer: Restore original input
+    end
+    SearchMode->>SearchMode: Exit search mode
+`} />
+
+Pressing Ctrl+R again while in search mode cycles to the next match. The search is case-insensitive and matches anywhere within the history entry, not just at the start.
+
+## Hook Composition
+
+The three hooks compose in a layered architecture:
+
+1. **useInputBuffer** is the base layer, owning the text buffer and cursor state
+2. **useArrowKeyHistory** wraps the buffer, intercepting Up/Down keys before they reach the buffer and injecting history entries
+3. **useHistorySearch** overlays a search mode on top, temporarily taking control of the input display while Ctrl+R is active
+
+This composition means each hook can be tested and reasoned about independently. The buffer has no knowledge of history, and history has no knowledge of search.
+
+## Design Patterns
+
+| Pattern | Application |
+|---------|------------|
+| **State Machine** | Input modes: normal, history-navigation, search. Only one mode is active at a time, with well-defined transitions between them |
+| **Memento** | History preservation. Each command entry is a memento of a past input that can be restored without side effects |
+| **Composite** | Hook composition. The three hooks are combined into a single input system without any one hook needing to understand the full picture |

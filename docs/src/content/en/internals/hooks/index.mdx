@@ -1,0 +1,75 @@
+---
+title: React Hooks
+sidebarTitle: React Hooks
+---
+
+# React Hooks
+
+**Source**: `src/hooks/` (87+ hooks)
+
+## Overview
+
+Claude Code uses 87+ custom React hooks to encapsulate business logic, UI state, and side effects. Hooks are organized by function.
+
+## Input & History
+
+| Hook | Purpose |
+|------|---------|
+| `useArrowKeyHistory` | Navigate input history with arrow keys |
+| `useInputBuffer` | Manage text input buffer |
+| `useHistorySearch` | Search through command history |
+
+## Tool Interaction
+
+| Hook | Purpose |
+|------|---------|
+| `useCanUseTool` | Check tool permission status |
+| `useCancelRequest` | Cancel in-flight AI requests |
+
+## UI & Navigation
+
+| Hook | Purpose |
+|------|---------|
+| `useGlobalKeybindings` | Register global keyboard shortcuts |
+| `useCommandKeybindings` | Command-specific shortcuts |
+| `useDiffInIDE` | Open diffs in external IDE |
+| `useIdeIntegration` | IDE connection management |
+
+## Session & Lifecycle
+
+| Hook | Purpose |
+|------|---------|
+| `useExitOnCtrlCD` | Handle Ctrl+C/D exit sequences |
+
+## Notifications (`hooks/notifs/`)
+
+18 notification hooks for different event types:
+
+- Tool execution notifications
+- Error notifications
+- Background task completion
+- Permission request notifications
+
+## Tool Permissions (`hooks/toolPermission/`)
+
+Permission management hooks:
+
+- Permission state tracking
+- User approval prompts
+- Permission caching
+- Policy enforcement
+
+## Ink-specific Hooks (`ink/hooks/`)
+
+10 hooks specific to the terminal UI:
+
+- Focus management
+- Stdin/stdout access
+- Cursor tracking
+- Component lifecycle
+
+## Deep Dive
+
+- [Input Hooks](./input-hooks) — useInputBuffer, useArrowKeyHistory, useHistorySearch internals and keystroke processing
+- [Permission Hooks](./permission-hooks-detail) — useCanUseTool, useToolPermission, and permission state management
+- [Notification Hooks](./notification-hooks) — 18 notification hooks, event type routing, and display lifecycle
