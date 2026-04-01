@@ -1,5 +1,5 @@
 export default {
-  index: { title: "Home" },
+  index: "Home",
   "---architecture": { type: "separator", title: "Architecture" },
   architecture: "Architecture",
   commands: "Commands",

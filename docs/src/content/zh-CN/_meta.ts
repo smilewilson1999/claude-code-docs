@@ -1,5 +1,5 @@
 export default {
-  index: { title: "首页" },
+  index: "首页",
   "---architecture": { type: "separator", title: "架构设计" },
   architecture: "架构设计",
   commands: "命令系统",
