@@ -1,0 +1,181 @@
+---
+title: 通知 Hooks
+---
+
+import { Mermaid } from "@/components/mermaid";
+
+# 通知 Hooks
+
+**源码**: `src/hooks/notifs/`
+
+## 概述
+
+Claude Code 包含 18 个通知 hooks，覆盖工具执行、错误处理、任务完成、权限请求等场景。每个 hook 负责特定事件类型的通知生成、显示策略和生命周期管理。
+
+## 通知系统架构
+
+<Mermaid chart={`
+flowchart TB
+    E[事件源] -->|工具事件| TH[工具通知 Hooks]
+    E -->|错误事件| EH[错误通知 Hooks]
+    E -->|任务事件| TaskH[任务通知 Hooks]
+    E -->|权限事件| PH[权限通知 Hooks]
+    E -->|系统事件| SH[系统通知 Hooks]
+
+    TH --> Q[通知队列]
+    EH --> Q
+    TaskH --> Q
+    PH --> Q
+    SH --> Q
+
+    Q -->|优先级排序| D[显示管理器]
+    D -->|终端内| TUI[终端 UI 通知]
+    D -->|系统级| OS[系统通知]
+`} />
+
+## 通知 Hook 分类
+
+| 分类 | Hooks | 职责 |
+|------|-------|------|
+| **工具通知** | `useToolStartNotif`、`useToolEndNotif`、`useToolErrorNotif` | 工具执行开始、完成、失败的通知 |
+| **错误通知** | `useErrorNotif`、`useApiErrorNotif`、`useRateLimitNotif` | 通用错误、API 错误、速率限制告警 |
+| **任务通知** | `useTaskCompleteNotif`、`useTaskFailNotif`、`useTaskProgressNotif` | 后台任务的完成、失败和进度更新 |
+| **权限通知** | `usePermissionRequestNotif`、`usePermissionGrantNotif`、`usePermissionDenyNotif` | 权限请求、授权、拒绝的通知 |
+| **系统通知** | `useSessionNotif`、`useUpdateNotif`、`useConnectNotif`、`useMemoryNotif`、`useContextNotif`、`useQuotaNotif` | 会话、更新、连接、记忆、上下文、配额 |
+
+## 通知生命周期
+
+<Mermaid chart={`
+sequenceDiagram
+    participant S as 事件源
+    participant H as 通知 Hook
+    participant Q as 通知队列
+    participant D as 显示管理器
+    participant U as 用户
+
+    S->>H: 触发事件
+    H->>H: 构建通知对象
+    H->>Q: 入队（带优先级）
+    Q->>D: 按优先级出队
+    D->>D: 选择显示策略
+    D->>U: 渲染通知
+    U-->>D: 交互/自动关闭
+    D->>Q: 标记已消费
+    Q->>H: 回调完成
+`} />
+
+## 通知对象结构
+
+```typescript
+interface Notification {
+  id: string;                    // 唯一标识
+  type: NotificationType;        // 通知类型
+  level: "info" | "warn" | "error" | "success";
+  title: string;                 // 标题
+  message: string;               // 详细内容
+  timestamp: number;             // 创建时间戳
+  ttl: number;                   // 存活时间（毫秒）
+  priority: number;              // 优先级（0 最高）
+  dismissible: boolean;          // 是否可手动关闭
+  actions?: NotificationAction[];// 可选操作按钮
+}
+
+interface NotificationAction {
+  label: string;
+  handler: () => void;
+}
+```
+
+## 显示策略
+
+每种通知类型使用不同的显示策略：
+
+| 策略 | 描述 | 适用通知 |
+|------|------|----------|
+| **内联** | 在当前输出流中显示 | 工具开始/完成 |
+| **横幅** | 顶部横幅，自动消失 | 任务完成、系统更新 |
+| **模态** | 阻塞式对话框，需要用户操作 | 权限请求 |
+| **静默** | 仅记录日志，不显示 | 调试信息 |
+| **系统** | 操作系统原生通知 | 后台任务完成（窗口非活跃时） |
+
+## 优先级和队列
+
+通知队列按优先级排序，确保重要通知优先展示：
+
+```
+优先级 0：权限请求（阻塞执行，必须立即处理）
+优先级 1：错误通知（用户需要感知的问题）
+优先级 2：任务通知（后台操作的结果反馈）
+优先级 3：工具通知（常规执行状态更新）
+优先级 4：系统通知（非紧急的信息提示）
+```
+
+### 队列行为
+
+- **容量限制**：队列最多保留 50 条未消费通知
+- **自动清理**：超过 TTL 的通知自动移除
+- **合并策略**：同类型重复通知合并（如连续的工具完成）
+- **抢占机制**：高优先级通知可中断低优先级的显示
+
+## Hook 实现模式
+
+每个通知 hook 遵循统一的结构：
+
+```typescript
+function useToolStartNotif() {
+  const { enqueue } = useNotificationQueue();
+  const { display } = useDisplayStrategy("inline");
+
+  const notify = useCallback((toolName: string, args: unknown) => {
+    const notification: Notification = {
+      id: generateId(),
+      type: "tool_start",
+      level: "info",
+      title: `执行 ${toolName}`,
+      message: formatArgs(args),
+      timestamp: Date.now(),
+      ttl: 5000,
+      priority: 3,
+      dismissible: true,
+    };
+    enqueue(notification);
+  }, [enqueue]);
+
+  return { notify };
+}
+```
+
+## 自定义配置
+
+通知行为可通过配置调整：
+
+```json
+{
+  "notifications": {
+    "enabled": true,
+    "systemNotifications": true,
+    "muteToolNotifs": false,
+    "errorSound": false,
+    "ttlOverrides": {
+      "task_complete": 10000,
+      "error": 0
+    }
+  }
+}
+```
+
+| 选项 | 默认值 | 说明 |
+|------|--------|------|
+| `enabled` | `true` | 全局通知开关 |
+| `systemNotifications` | `true` | 是否使用系统原生通知 |
+| `muteToolNotifs` | `false` | 静音工具执行通知 |
+| `errorSound` | `false` | 错误时是否播放提示音 |
+| `ttlOverrides` | `{}` | 按类型覆盖存活时间，`0` 表示永不自动关闭 |
+
+## 设计模式
+
+| 模式 | 应用 |
+|------|------|
+| **观察者** | 事件源发布事件，通知 hooks 订阅并响应各自关注的类型 |
+| **队列** | 通知入队后按优先级调度，解耦产生和消费的时序 |
+| **模板方法** | 每个 hook 共享通知构建骨架，仅覆写类型特定的配置和格式化逻辑 |

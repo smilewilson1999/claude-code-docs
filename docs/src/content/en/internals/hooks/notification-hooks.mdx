@@ -1,0 +1,150 @@
+---
+title: Notification Hooks
+---
+
+import { Mermaid } from "@/components/mermaid";
+
+# Notification Hooks
+
+**Source**: `src/hooks/notifs/`
+
+## Overview
+
+Claude Code uses 18 specialized notification hooks to handle different event types. Each hook watches for a specific kind of state change -- tool execution results, API errors, background task completion, permission requests -- and creates an appropriate notification. The hooks share a common implementation pattern but are separated so that each event type can define its own display behavior, priority, and lifetime.
+
+## Notification System Architecture
+
+<Mermaid chart={`graph LR
+    A[Tool Execution] --> D[useToolStartNotif]
+    B[API Error] --> E[useApiErrorNotif]
+    C[Task Completion] --> F[useTaskCompleteNotif]
+    D --> G[NotificationQueue in AppState]
+    E --> G
+    F --> G
+    G --> H[NotificationRenderer]
+    H --> I[Terminal Display]
+`} />
+
+## Notification Hook Categories
+
+| Category | Hooks | Purpose |
+|----------|-------|---------|
+| **Tool** | `useToolStartNotif`, `useToolEndNotif`, `useToolErrorNotif` | Track tool execution lifecycle from start through success or failure |
+| **Error** | `useErrorNotif`, `useApiErrorNotif` | Surface runtime errors and API communication failures |
+| **Task** | `useTaskCompleteNotif`, `useAgentCompleteNotif` | Alert when background tasks or sub-agent runs finish |
+| **Permission** | `usePermissionRequestNotif`, `usePermissionGrantNotif` | Inform user when tool permissions are requested or granted |
+| **System** | `useSessionNotif`, `useUpdateNotif` | Session lifecycle events and available software updates |
+
+Additional hooks cover edge cases: `useRateLimitNotif` for API rate limiting, `useContextWindowNotif` for context size warnings, `useMemoryNotif` for memory file operations, `useMcpNotif` for MCP server events, `useCostNotif` for token usage alerts, and `useRetryNotif` for automatic retry attempts.
+## Notification Lifecycle
+
+<Mermaid chart={`sequenceDiagram
+    participant Event
+    participant Hook
+    participant Queue
+    participant Renderer
+    participant Terminal
+
+    Event->>Hook: State change fires
+    Hook->>Hook: Create notification object
+    Hook->>Queue: Enqueue notification
+    Queue->>Renderer: Pick up next notification
+    Renderer->>Terminal: Display notification
+    alt Auto-dismiss
+        Renderer->>Renderer: Wait for duration
+        Renderer->>Queue: Dequeue notification
+    else User dismiss
+        Terminal->>Renderer: User presses dismiss key
+        Renderer->>Queue: Dequeue notification
+    end
+`} />
+
+## Notification Object
+
+Every notification created by any of the 18 hooks conforms to a common shape:
+
+```ts
+{
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  severity: "info" | "warning" | "error";
+  timestamp: number;
+  duration: number;
+  dismissible: boolean;
+}
+```
+
+The `type` field corresponds to the hook that created it (e.g., `tool-start`, `api-error`, `task-complete`). The `duration` controls auto-dismiss timing in milliseconds; zero means persist until explicitly dismissed.
+## Display Strategies
+
+Different notification types use different display strategies depending on their importance and context:
+
+| Strategy | Description | Used By |
+|----------|-------------|---------|
+| **Inline** | Rendered within the conversation flow, becoming part of the visible transcript | Tool start/end, task completion |
+| **Toast** | Floating notification that appears briefly then fades out | Info updates, cost alerts |
+| **Persistent** | Stays visible until the user explicitly dismisses it | Errors, permission requests |
+| **Sound** | Triggers the terminal bell character (`\x07`) in addition to visual display | Task completion, errors (when terminal is backgrounded) |
+
+A single notification can combine strategies. For example, a tool error may be displayed inline and also trigger a sound if the terminal is not in focus.
+
+## Priority and Queuing
+
+When multiple notifications arrive simultaneously, the queue orders them by priority:
+
+| Priority | Types | Behavior |
+|----------|-------|----------|
+| **Critical** | Error, API error | Displayed immediately, interrupting lower-priority notifications |
+| **High** | Permission request, permission grant | Displayed next, as they may block execution |
+| **Normal** | Task complete, agent complete, tool events | Queued in arrival order |
+| **Low** | Session info, update available, cost | Displayed only when no higher-priority notifications are pending |
+
+The queue has a maximum depth. If more than 50 notifications are pending, the oldest low-priority notifications are silently dropped to prevent unbounded memory growth.
+## Hook Implementation Pattern
+
+All 18 hooks share a common implementation structure:
+
+```ts
+function useSpecificNotif() {
+  const state = useAppState();
+  const enqueue = useNotificationQueue();
+
+  useEffect(() => {
+    // Watch for the specific state change
+    if (state.someCondition) {
+      enqueue({
+        type: "specific-type",
+        title: "...",
+        message: "...",
+        severity: "info",
+        duration: 3000,
+        dismissible: true,
+      });
+    }
+  }, [state.someCondition]);
+}
+```
+
+Each hook is a thin wrapper: a `useEffect` that watches for a specific condition in the application state, creates a notification object when that condition is met, and enqueues it. Cleanup on unmount is handled automatically by the effect teardown.
+
+## Customization
+
+Users can configure notification behavior through `.claude/settings.json`:
+
+| Setting | Effect |
+|---------|--------|
+| `notifications.disabled` | Array of notification types to suppress entirely |
+| `notifications.duration` | Override default display duration (in milliseconds) |
+| `notifications.sound` | Enable or disable terminal bell for sound-enabled notifications |
+
+When a type is disabled, the hook still fires but the enqueue call is skipped, preserving the ability to re-enable without restarting.
+
+## Design Patterns
+
+| Pattern | Application |
+|---------|------------|
+| **Observer** | Each hook observes specific state changes via `useEffect`, decoupled from event sources |
+| **Queue** | NotificationQueue manages ordering, priority, and capacity between producers and consumers |
+| **Template Method** | All 18 hooks share the same structure -- watch state, create object, enqueue -- varying only the condition and details |

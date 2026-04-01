@@ -1,0 +1,135 @@
+---
+title: Permission Hooks
+---
+
+import { Mermaid } from "@/components/mermaid";
+
+# Permission Hooks
+
+**Source**: `src/hooks/toolPermission/`
+
+## Overview
+
+React hooks that manage the tool permission lifecycle within the UI. These hooks handle checking whether a tool is allowed to run, prompting the user when approval is needed, and caching decisions to avoid repeated prompts. They bridge the gap between the permission engine (which evaluates rules) and the terminal interface (which displays prompts and collects responses).
+
+## Permission Hook Architecture
+
+<Mermaid chart={`graph LR
+    A[useCanUseTool] --> B[PermissionState in AppState]
+    B --> C{Cached?}
+    C -->|Hit| D[Return Allowed/Denied]
+    C -->|Miss| E[Return NeedsApproval]
+
+    F[useToolPermission] --> G[Check mode]
+    G --> H[Match rules]
+    H --> I[Lookup cache]
+    I -->|Hit| J[Return cached decision]
+    I -->|Miss| K[Trigger user prompt]
+    K --> L[Wait for response]
+    L --> M[Update cache]
+    M --> N[Return decision]
+`} />
+
+## useCanUseTool
+
+A synchronous read hook that checks whether a specific tool can be used right now. It reads directly from the permission state cache in AppState and returns one of three values:
+
+| Return Value | Meaning |
+|-------------|---------|
+| `Allowed` | Tool has been approved, execution may proceed |
+| `Denied` | Tool has been explicitly denied, execution must not proceed |
+| `NeedsApproval` | No cached decision exists, the UI should show an approval prompt |
+
+This hook does not trigger any side effects. It is a pure read from state, making it safe to call during render. Components use it to conditionally render approval dialogs or proceed with tool execution.
+
+## Permission State Machine
+
+<Mermaid chart={`flowchart TD
+    A[Idle] --> B[Tool call arrives]
+    B --> C{Check cache}
+    C -->|Hit: Allowed| D[Execute tool]
+    C -->|Hit: Denied| E[Block tool]
+    C -->|Miss| F[Set state to Pending]
+    F --> G[Show approval prompt]
+    G --> H{User responds}
+    H -->|Allow| I[Cache Allowed]
+    H -->|Deny| J[Cache Denied]
+    I --> D
+    J --> E
+    D --> K[Return to Idle]
+    E --> K
+`} />
+
+## useToolPermission
+
+The main permission request hook. It orchestrates the full permission check flow, composing multiple steps into a single async operation that the UI can await.
+
+**Execution Steps:**
+
+1. **Mode Check** -- Verify the current permission mode (auto-accept, auto-deny, or interactive). In non-interactive modes, return immediately without prompting
+2. **Rule Matching** -- Evaluate the tool call against configured permission rules. Rules can match by tool name, argument patterns, or file paths
+3. **Cache Lookup** -- Check whether a decision for this exact tool+arguments combination has already been made this session
+4. **User Prompt** -- If no cached decision exists and mode is interactive, display the approval dialog and wait for the user response
+5. **Decision Caching** -- Store the user decision in the permission state so future identical calls skip the prompt
+
+### State Shape
+
+The permission state stored in AppState:
+
+```ts
+{
+  decisions: Map<string, Decision>;
+  pending: Set<string>;
+  mode: PermissionMode;
+}
+```
+
+The `decisions` map is keyed by a hash of the tool name and its arguments. The `pending` set tracks tool calls currently awaiting user input, preventing duplicate prompts for the same tool call.
+
+## User Prompt Integration
+
+When a permission decision is needed, the hook triggers a UI prompt through the AppState. The approval dialog component renders inline in the terminal and supports:
+
+| Interaction | Action |
+|------------|--------|
+| `y` / Enter | Allow this tool call |
+| `n` / Escape | Deny this tool call |
+| `a` | Allow all calls to this tool for the session |
+| `d` | Deny all calls to this tool for the session |
+
+Session-scoped decisions (allow-all / deny-all) are stored with a broader cache key that matches any arguments for the given tool name. One-time decisions use the full tool+arguments hash.
+
+## Cache Invalidation
+
+Cached permission decisions are invalidated under specific conditions:
+
+| Trigger | Effect |
+|---------|--------|
+| **Session end** | All cached decisions are cleared when Claude Code exits |
+| **Mode change** | Switching permission modes (e.g., from interactive to auto-accept) clears the cache to avoid stale decisions |
+| **Explicit reset** | The `/permissions` command allows users to clear all cached decisions mid-session |
+| **Rule update** | When `.claude/settings.json` permission rules change, affected cache entries are invalidated |
+
+The cache is intentionally not persisted to disk. Every new session starts with a clean permission state, ensuring users always have a chance to review tool access.
+
+## Hook Dependencies
+
+<Mermaid chart={`graph TD
+    A[useToolPermission] --> B[useAppState]
+    A --> C[useCanUseTool]
+    A --> D[useToolExecution]
+    B --> E[AppState store]
+    C --> E
+    D --> F[Tool runner]
+    D --> A
+`} />
+
+`useToolPermission` depends on `useAppState` for reading and writing permission state, on `useCanUseTool` for the synchronous check, and is itself consumed by `useToolExecution` which calls it before running any tool.
+
+## Design Patterns
+
+| Pattern | Application |
+|---------|------------|
+| **Cache-Aside** | Permission decisions are cached lazily. The cache is populated only when a decision is made, not preloaded |
+| **State Machine** | Permission states (Idle, Pending, Allowed, Denied) with deterministic transitions driven by user input and cache hits |
+| **Observer** | Components subscribe to permission state changes via `useAppState`, automatically re-rendering when decisions are made |

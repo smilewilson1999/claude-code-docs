@@ -1,0 +1,49 @@
+---
+title: React Hooks
+sidebarTitle: React Hooks
+---
+
+# React Hooks
+
+**源码**: `src/hooks/`（87+ hooks）
+
+## 概述
+
+Claude Code 使用 87+ 个自定义 React hooks 来封装业务逻辑、UI 状态和副作用。
+
+## 输入与历史
+
+| Hook | 用途 |
+|------|------|
+| `useArrowKeyHistory` | 使用方向键导航输入历史 |
+| `useInputBuffer` | 管理文本输入缓冲区 |
+| `useHistorySearch` | 搜索命令历史 |
+
+## 工具交互
+
+| Hook | 用途 |
+|------|------|
+| `useCanUseTool` | 检查工具权限状态 |
+| `useCancelRequest` | 取消进行中的 AI 请求 |
+
+## UI 与导航
+
+| Hook | 用途 |
+|------|------|
+| `useGlobalKeybindings` | 注册全局键盘快捷键 |
+| `useCommandKeybindings` | 命令特定快捷键 |
+| `useDiffInIDE` | 在外部 IDE 中打开 diff |
+
+## 通知 (`hooks/notifs/`)
+
+18 个通知 hooks，用于不同事件类型：工具执行通知、错误通知、后台任务完成和权限请求通知。
+
+## 工具权限 (`hooks/toolPermission/`)
+
+权限管理 hooks：权限状态跟踪、用户审批提示、权限缓存和策略执行。
+
+## 深入阅读
+
+- [输入 Hooks](./input-hooks) — useInputBuffer、useArrowKeyHistory、useHistorySearch 内部原理和按键处理
+- [权限 Hooks](./permission-hooks-detail) — useCanUseTool、useToolPermission 和权限状态管理
+- [通知 Hooks](./notification-hooks) — 18 个通知 hooks、事件类型路由和显示生命周期

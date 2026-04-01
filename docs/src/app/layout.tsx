@@ -1,6 +1,5 @@
 import "nextra-theme-docs/style.css";
 import "./globals.css";
-import { Analytics } from "@vercel/analytics/next";
 
 export const metadata = {
   title: {
@@ -14,10 +13,7 @@ export const metadata = {
 const RootLayout = ({ children }: React.PropsWithChildren) => {
   return (
     <html dir="ltr" suppressHydrationWarning>
-      <body>
-        {children}
-        <Analytics />
-      </body>
+      <body>{children}</body>
     </html>
   );
 };
