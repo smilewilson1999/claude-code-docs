@@ -5,8 +5,11 @@
 </p>
 
 <p align="center">
-  <a href="#">English</a> · <a href="#">简体中文</a> · <a href="#">繁體中文</a>
+  <a href="./README.md">English</a> · <a href="./README.zh-CN.md">简体中文</a> · <a href="./README.zh-TW.md">繁體中文</a>
 </p>
+
+> [!NOTE]
+> Extracted from npm package `@anthropic-ai/claude-code` version **2.1.88**. The published package ships a single bundled `cli.js` (~12 MB). The `src/` directory in this repo contains the unbundled TypeScript source extracted from the npm tarball.
 
 > [!IMPORTANT]
 > This project is for **study and educational purposes only**. It is an independent analysis of the Claude Code CLI architecture. This repository is **not affiliated with, endorsed by, or maintained by Anthropic**. All trademarks belong to their respective owners.
