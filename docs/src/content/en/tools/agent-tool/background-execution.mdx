@@ -41,11 +41,13 @@ Setting `run_in_background: true` changes the Agent Tool's behavior:
 4. The parent's conversation continues without waiting
 
 ```ts
-const agentId = await agentTool.invoke({
+// The Agent Tool returns a result containing the agentId
+const result = await agentTool.invoke({
   prompt: "Refactor the authentication module",
   run_in_background: true,
 });
-// Parent continues immediately -- agentId is available now
+// result.agentId — unique identifier for the background agent
+// Parent continues immediately without waiting for completion
 ```
 
 Background agents inherit the same tool set and prompt construction as foreground agents.

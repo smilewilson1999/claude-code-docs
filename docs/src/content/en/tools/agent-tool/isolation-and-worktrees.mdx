@@ -11,9 +11,9 @@ Sub-agents must be isolated from the parent and from each other to prevent file 
 
 ```mermaid
 flowchart TD
-    A[Agent Tool invoked] --> B{worktree parameter?}
-    B -->|true| C[Create git worktree]
-    B -->|false / omitted| D[Share parent CWD]
+    A[Agent Tool invoked] --> B{isolation parameter?}
+    B -->|"worktree"| C[Create git worktree]
+    B -->|omitted| D[Share parent CWD]
 
     C --> E{In a git repo?}
     E -->|Yes| F[git worktree add]

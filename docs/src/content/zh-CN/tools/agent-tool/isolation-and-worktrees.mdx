@@ -17,7 +17,7 @@ graph TD
     A[子代理启动] --> B{指定 isolation 参数？}
     B -->|否| C[默认模式]
     B -->|是| D{isolation 值}
-    D -->|worktree| E{当前目录是 git 仓库？}
+    D -->|"worktree"| E{当前目录是 git 仓库？}
     E -->|是| F[Worktree 模式]
     E -->|否| G[回退到默认模式]
     C --> H[共享 CWD]
